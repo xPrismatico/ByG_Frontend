@@ -11,6 +11,8 @@ import { QuoteTable, CotizacionUI } from "@/components/Quotes/QuoteTable";
 
 import { QuoteFilters, QuoteDto } from "@/interfaces/Quote";
 import { QuoteServices } from "@/services/QuoteServices";
+import { CreateQuoteDialog } from "@/components/Quotes/CreateQuoteDialog";
+import Cotizaciones from '../../app/cotizacion/page';
 
 export default function QuoteList() {
   const [filters, setFilters] = useState<QuoteFilters>({});
@@ -66,9 +68,7 @@ export default function QuoteList() {
         </div>
         
         <div className="flex-shrink-0">
-          <Button className="bg-[#E33439] hover:bg-[#c12a2f] text-white">
-            <Plus className="w-4 h-4 mr-2" /> Nueva Cotización
-          </Button>
+        <CreateQuoteDialog />
         </div>
       </div>
 

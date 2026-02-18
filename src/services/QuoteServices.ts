@@ -1,6 +1,6 @@
 import { ApiBackend } from "@/clients/Axios";
 import { ResponseAPI } from "@/interfaces/ResponseAPI";
-import { QuoteDto, QuoteFilters } from "@/interfaces/Quote";
+import { CreateQuoteDto, QuoteDto, QuoteFilters } from "@/interfaces/Quote";
 
 export const QuoteServices = {
   // GET: /api/Quote
@@ -18,5 +18,12 @@ export const QuoteServices = {
       newStatus,
     });
     return response.data.message;
+  },
+
+
+  async createQuote(data: CreateQuoteDto): Promise<QuoteDto> {
+    const response = await ApiBackend.post<ResponseAPI<QuoteDto>>("/api/Quote/create", data);
+    return response.data.data;
   }
 };
+

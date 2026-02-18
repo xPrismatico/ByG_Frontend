@@ -16,3 +16,17 @@ export interface QuoteFilters {
   pageNumber?: number;
   pageSize?: number;
 }
+
+export interface CreateQuoteItemDto {
+  name: string;
+  quantity: number;
+  unitPrice: number;
+}
+
+export interface CreateQuoteDto {
+  number: string;
+  status: string;
+  date: string;
+  totalPrice: number;
+  quoteItems: CreateQuoteItemDto[];
+}
