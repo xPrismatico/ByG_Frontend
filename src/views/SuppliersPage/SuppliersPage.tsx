@@ -6,6 +6,7 @@ import { Plus } from "lucide-react"
 import { SupplierService } from "@/services/SupplierServices"
 import SuppliersTable from "@/components/supplier/SuppliersTable"
 import SupplierUpsertDialog, { SupplierUpsertValues } from "@/components/supplier/SupplierUpsertDialog"
+import SupplierDetailsDialog from "@/components/supplier/SupplierDetailsDialog"
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<SupplierSummary[]>([])
@@ -15,6 +16,10 @@ export default function SuppliersPage() {
   // Estados para el Modal de Crear/Editar
   const [upsertOpen, setUpsertOpen] = useState(false)
   const [editingSupplier, setEditingSupplier] = useState<SupplierDetail | null>(null)
+
+    // Estados para el Modal de Ver Detalles
+  const [detailsOpen, setDetailsOpen] = useState(false)
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierDetail | null>(null)
 
   // Estados para prevenir doble clicks
   const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set())
@@ -99,10 +104,20 @@ export default function SuppliersPage() {
     })
   }
 
-  // Placeholders para acciones futuras
-  function handleView(supplier: SupplierSummary) {
-    console.log("Ver detalle:", supplier.id)
-    // Aquí abriremos el Modal de Detalle visual pronto
+    // Lógica completa para Ver Detalle
+  async function handleView(supplier: SupplierSummary) {
+    setErrorMsg(null)
+    
+    // Traemos el detalle completo desde el backend
+    const res = await SupplierService.getSupplierById(supplier.id)
+    
+    if (!res.success || !res.data) {
+      setErrorMsg(res.errors?.[0] || "No se pudo cargar el detalle del proveedor.")
+      return
+    }
+
+    setSelectedSupplier(res.data)
+    setDetailsOpen(true)
   }
 
   // Lógica completa para Editar
@@ -121,20 +136,18 @@ export default function SuppliersPage() {
     setUpsertOpen(true)
   }
 
-  // Lógica para enviar los datos del Formulario al Backend
-  async function handleUpsertSubmit(payload: SupplierUpsertValues) {
-    setErrorMsg(null)
-
+    // Lógica para enviar los datos del Formulario al Backend
+  // AHORA DEVUELVE UNA PROMESA PARA QUE EL MODAL SEPA QUÉ PASÓ
+  async function handleUpsertSubmit(payload: SupplierUpsertValues): Promise<{ success: boolean; errorMsg?: string }> {
+    
     if (payload.mode === "create") {
-      // Flujo: CREAR
       const res = await SupplierService.createSupplier(payload)
       
       if (!res.success || !res.data) {
-        setErrorMsg(res.errors?.[0] || "No se pudo crear el proveedor.")
-        return
+        // En lugar de setErrorMsg general, devolvemos el error al Modal
+        return { success: false, errorMsg: res.errors?.[0] || "No se pudo crear el proveedor." }
       }
 
-      // Mapeamos el Detail que devuelve el backend al Summary de nuestra tabla
       const newSummary: SupplierSummary = {
         id: res.data.id,
         rut: res.data.rut,
@@ -147,12 +160,11 @@ export default function SuppliersPage() {
       setSuppliers((prev) => [newSummary, ...prev])
       setUpsertOpen(false)
       setEditingSupplier(null)
+      return { success: true }
 
     } else {
-      // Flujo: EDITAR
-      if (!editingSupplier) return
+      if (!editingSupplier) return { success: false, errorMsg: "Error interno" }
 
-      // El backend requiere isActive para el Update [cite: 500-520]
       const updatePayload: SupplierUpdate = {
         rut: payload.rut,
         businessName: payload.businessName,
@@ -162,17 +174,15 @@ export default function SuppliersPage() {
         address: payload.address,
         city: payload.city,
         productCategories: payload.productCategories,
-        isActive: editingSupplier.isActive, // Mantenemos el estado actual
+        isActive: editingSupplier.isActive,
       }
 
       const res = await SupplierService.updateSupplier(editingSupplier.id, updatePayload)
 
       if (!res.success || !res.data) {
-        setErrorMsg(res.errors?.[0] || "No se pudo actualizar el proveedor.")
-        return
+        return { success: false, errorMsg: res.errors?.[0] || "No se pudo actualizar el proveedor." }
       }
 
-      // Actualizamos la fila en la tabla
       setSuppliers((prev) =>
         prev.map((s) => (s.id === editingSupplier.id ? {
           ...s,
@@ -185,6 +195,7 @@ export default function SuppliersPage() {
 
       setUpsertOpen(false)
       setEditingSupplier(null)
+      return { success: true }
     }
   }
 
@@ -244,6 +255,16 @@ export default function SuppliersPage() {
         }}
         supplier={editingSupplier}
         onSubmit={handleUpsertSubmit}
+      />
+
+        {/* ✅ NUEVO: Instanciamos el Dialog de Detalles al final */}
+      <SupplierDetailsDialog
+        open={detailsOpen}
+        onOpenChange={(open: boolean) => {
+          setDetailsOpen(open)
+          if (!open) setSelectedSupplier(null) // Limpiamos al cerrar
+        }}
+        supplier={selectedSupplier}
       />
     </div>
   )

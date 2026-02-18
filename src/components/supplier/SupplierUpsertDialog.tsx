@@ -10,8 +10,8 @@ import {
 } from "@/components/ui/dialog"
 import type { SupplierCreate, SupplierDetail } from "@/interfaces/supplier"
 import { cn } from "@/lib/utils"
+import { AlertCircle } from "lucide-react"
 
-// Categorías comunes predefinidas para ByG Ingeniería para estandarizar el ingreso
 const COMMON_CATEGORIES = [
   "Herramientas Eléctricas",
   "Equipos de Seguridad",
@@ -27,13 +27,39 @@ interface Props {
   open: boolean
   onOpenChange: (open: boolean) => void
   supplier: SupplierDetail | null
-  onSubmit: (values: SupplierUpsertValues) => Promise<void>
+  onSubmit: (values: SupplierUpsertValues) => Promise<{ success: boolean; errorMsg?: string }>
+}
+
+// --- UTILIDADES ---
+
+const formatRut = (val: string) => {
+  let clean = val.replace(/[^0-9kK]/g, "").toUpperCase()
+  if (!clean) return ""
+  if (clean.length <= 1) return clean
+  const body = clean.slice(0, -1)
+  const dv = clean.slice(-1)
+  const formattedBody = body.replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+  return `${formattedBody}-${dv}`
+}
+
+const formatPhone = (val: string) => {
+  let clean = val.replace(/[^\d\+ ]/g, "")
+  if (clean.indexOf('+') > 0) {
+    clean = clean.replace(/\+/g, "")
+    clean = '+' + clean
+  }
+  return clean
+}
+
+// Validación de RUT (mínima estructura)
+const isRutValid = (rut: string) => {
+    return /^[0-9]{1,2}\.[0-9]{3}\.[0-9]{3}-[0-9Kk]{1}$/.test(rut);
 }
 
 export default function SupplierUpsertDialog({ open, onOpenChange, supplier, onSubmit }: Props) {
   const isEdit = !!supplier
 
-  // Estados del formulario
+  // Estados de datos
   const [rut, setRut] = useState("")
   const [businessName, setBusinessName] = useState("")
   const [contactName, setContactName] = useState("")
@@ -41,25 +67,36 @@ export default function SupplierUpsertDialog({ open, onOpenChange, supplier, onS
   const [phone, setPhone] = useState("")
   const [address, setAddress] = useState("")
   const [city, setCity] = useState("")
-  
-  // Manejo de categorías como un arreglo en el frontend para mejor UX
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
-
+  
+  // Estados de UI y Errores
   const [loading, setLoading] = useState(false)
+  const [globalError, setGlobalError] = useState<string | null>(null)
+  
+  // Errores individuales por campo
+  const [errors, setErrors] = useState({
+      rut: "",
+      businessName: "",
+      email: "",
+      phone: "",
+      contactName: "",
+      address: "",
+      city: ""
+  })
 
-  // Reset o Carga de datos al abrir el modal
+  // Limpieza inicial
   useEffect(() => {
     if (open) {
+      setGlobalError(null)
+      setErrors({ rut: "", businessName: "", email: "", phone: "", contactName: "", address: "", city: "" })
       if (supplier) {
-        setRut(supplier.rut)
+        setRut(formatRut(supplier.rut))
         setBusinessName(supplier.businessName)
         setContactName(supplier.contactName || "")
         setEmail(supplier.email)
         setPhone(supplier.phone || "")
         setAddress(supplier.address || "")
         setCity(supplier.city || "")
-        
-        // Convertir el string del backend "EPP, Ferretería" a un array ["EPP", "Ferretería"]
         const cats = supplier.productCategories
           ? supplier.productCategories.split(",").map(c => c.trim()).filter(Boolean)
           : []
@@ -77,6 +114,41 @@ export default function SupplierUpsertDialog({ open, onOpenChange, supplier, onS
     }
   }, [open, supplier])
 
+  // --- VALIDACIONES ON BLUR ---
+  const validateField = (field: string, value: string) => {
+      let errorMsg = "";
+      
+      switch (field) {
+          case 'rut':
+              if (!value) errorMsg = "El RUT es obligatorio.";
+              else if (value.length < 11 || !isRutValid(value)) errorMsg = "Formato de RUT inválido (Ej: 12.345.678-9).";
+              break;
+          case 'businessName':
+              if (!value) errorMsg = "La Razón Social es obligatoria.";
+              else if (value.trim().length < 2) errorMsg = "Debe tener al menos 2 caracteres.";
+              break;
+          case 'email':
+              if (!value) errorMsg = "El email es obligatorio.";
+              else if (!/^\S+@\S+\.\S+$/.test(value)) errorMsg = "Ingresa un email válido.";
+              break;
+          case 'phone':
+              if (value && value.trim().length < 8) errorMsg = "El teléfono debe tener al menos 8 dígitos.";
+              break;
+          case 'contactName':
+              if (value && value.trim().length < 3) errorMsg = "El nombre debe tener al menos 3 caracteres.";
+              break;
+          case 'address':
+               if (value && value.trim().length < 5) errorMsg = "La dirección debe tener al menos 5 caracteres.";
+               break;
+          case 'city':
+               if (value && value.trim().length < 3) errorMsg = "La ciudad debe tener al menos 3 caracteres.";
+               break;
+      }
+
+      setErrors(prev => ({ ...prev, [field]: errorMsg }));
+      return !errorMsg;
+  }
+
   const toggleCategory = (cat: string) => {
     setSelectedCategories(prev => 
       prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]
@@ -86,23 +158,42 @@ export default function SupplierUpsertDialog({ open, onOpenChange, supplier, onS
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (loading) return
+    setGlobalError(null)
+
+    // Validar todos los campos antes de enviar
+    const isRutOk = validateField('rut', rut);
+    const isBusinessOk = validateField('businessName', businessName);
+    const isEmailOk = validateField('email', email);
+    const isPhoneOk = validateField('phone', phone);
+    const isContactOk = validateField('contactName', contactName);
+    const isAddressOk = validateField('address', address);
+    const isCityOk = validateField('city', city);
+
+    if (!isRutOk || !isBusinessOk || !isEmailOk || !isPhoneOk || !isContactOk || !isAddressOk || !isCityOk) {
+        return; // Detener si hay errores locales
+    }
 
     setLoading(true)
     try {
-      // Unimos el array a string separado por comas para cumplir con el DTO del Backend
       const productCategoriesStr = selectedCategories.length > 0 ? selectedCategories.join(", ") : undefined
 
-      await onSubmit({
+      // Esperamos el resultado del submit (modificaremos SuppliersPage para que devuelva esto)
+      const result = await onSubmit({
         mode: isEdit ? "edit" : "create",
         rut: rut.trim(),
         businessName: businessName.trim(),
         contactName: contactName.trim() || undefined,
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         phone: phone.trim() || undefined,
         address: address.trim() || undefined,
         city: city.trim() || undefined,
         productCategories: productCategoriesStr,
       })
+
+      if (!result.success && result.errorMsg) {
+          setGlobalError(result.errorMsg); // Mostrar error devuelto por el backend
+      }
+
     } finally {
       setLoading(false)
     }
@@ -120,71 +211,106 @@ export default function SupplierUpsertDialog({ open, onOpenChange, supplier, onS
           </p>
         </DialogHeader>
 
-        {/* Body scrolleable */}
+        {/* --- BANNER DE ERROR GLOBAL (EJ: RUT DUPLICADO) --- */}
+        {globalError && (
+            <div className="mx-6 mt-4 flex items-center gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-600 border border-red-200">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <p>{globalError}</p>
+            </div>
+        )}
+
         <form id="supplier-form" onSubmit={handleSubmit} className="flex-1 overflow-y-auto px-6 py-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             
-            {/* RUT - Requerido (8 a 12 caracteres según Backend) */}
+            {/* RUT */}
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-600">
                 RUT <span className="text-red-500">*</span>
               </label>
               <input
-                required
-                minLength={8}
-                maxLength={12}
                 value={rut}
-                onChange={(e) => setRut(e.target.value)}
+                onChange={(e) => {
+                    setRut(formatRut(e.target.value));
+                    if (errors.rut) setErrors(prev => ({...prev, rut: ""})); // Limpiar error al escribir
+                }}
+                onBlur={(e) => validateField('rut', e.target.value)}
                 placeholder="12.345.678-9"
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                className={cn(
+                    "w-full rounded-md border px-3 py-2 text-sm focus:outline-none transition-colors uppercase",
+                    errors.rut ? "border-red-500 focus:ring-1 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                )}
                 disabled={loading}
               />
+              {errors.rut && <p className="text-xs text-red-500 mt-1">{errors.rut}</p>}
             </div>
 
-            {/* Razón Social - Requerido */}
+            {/* Razón Social */}
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-600">
                 Razón Social <span className="text-red-500">*</span>
               </label>
               <input
-                required
                 maxLength={150}
                 value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
+                onChange={(e) => {
+                    setBusinessName(e.target.value);
+                    if (errors.businessName) setErrors(prev => ({...prev, businessName: ""}));
+                }}
+                onBlur={(e) => validateField('businessName', e.target.value)}
                 placeholder="Ej: Importadora ByG SpA"
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                className={cn(
+                    "w-full rounded-md border px-3 py-2 text-sm focus:outline-none transition-colors",
+                    errors.businessName ? "border-red-500 focus:ring-1 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                )}
                 disabled={loading}
               />
+               {errors.businessName && <p className="text-xs text-red-500 mt-1">{errors.businessName}</p>}
             </div>
 
-            {/* Email - Requerido */}
+            {/* Email */}
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-600">
                 Email de Ventas <span className="text-red-500">*</span>
               </label>
               <input
-                required
                 type="email"
                 maxLength={100}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (errors.email) setErrors(prev => ({...prev, email: ""}));
+                }}
+                onBlur={(e) => validateField('email', e.target.value)}
                 placeholder="ventas@empresa.cl"
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                className={cn(
+                    "w-full rounded-md border px-3 py-2 text-sm focus:outline-none transition-colors",
+                    errors.email ? "border-red-500 focus:ring-1 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                )}
                 disabled={loading}
               />
+               {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
             </div>
 
             {/* Teléfono */}
             <div className="space-y-1">
               <label className="text-xs font-semibold text-slate-600">Teléfono</label>
               <input
+                type="tel"
                 maxLength={20}
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => {
+                    setPhone(formatPhone(e.target.value));
+                    if (errors.phone) setErrors(prev => ({...prev, phone: ""}));
+                }}
+                onBlur={(e) => validateField('phone', e.target.value)}
                 placeholder="+56 9 1234 5678"
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                className={cn(
+                    "w-full rounded-md border px-3 py-2 text-sm focus:outline-none transition-colors",
+                    errors.phone ? "border-red-500 focus:ring-1 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                )}
                 disabled={loading}
               />
+               {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
             </div>
 
             {/* Nombre Contacto */}
@@ -193,11 +319,19 @@ export default function SupplierUpsertDialog({ open, onOpenChange, supplier, onS
               <input
                 maxLength={100}
                 value={contactName}
-                onChange={(e) => setContactName(e.target.value)}
+                onChange={(e) => {
+                    setContactName(e.target.value);
+                    if (errors.contactName) setErrors(prev => ({...prev, contactName: ""}));
+                }}
+                onBlur={(e) => validateField('contactName', e.target.value)}
                 placeholder="Ej: Juan Pérez (Ejecutivo de Cuentas)"
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                className={cn(
+                    "w-full rounded-md border px-3 py-2 text-sm focus:outline-none transition-colors",
+                    errors.contactName ? "border-red-500 focus:ring-1 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                )}
                 disabled={loading}
               />
+               {errors.contactName && <p className="text-xs text-red-500 mt-1">{errors.contactName}</p>}
             </div>
 
             {/* Dirección */}
@@ -206,11 +340,19 @@ export default function SupplierUpsertDialog({ open, onOpenChange, supplier, onS
               <input
                 maxLength={200}
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={(e) => {
+                    setAddress(e.target.value);
+                    if (errors.address) setErrors(prev => ({...prev, address: ""}));
+                }}
+                onBlur={(e) => validateField('address', e.target.value)}
                 placeholder="Av. Industrial 123, Galpón 4"
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                className={cn(
+                    "w-full rounded-md border px-3 py-2 text-sm focus:outline-none transition-colors",
+                    errors.address ? "border-red-500 focus:ring-1 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                )}
                 disabled={loading}
               />
+               {errors.address && <p className="text-xs text-red-500 mt-1">{errors.address}</p>}
             </div>
 
             {/* Ciudad */}
@@ -219,17 +361,25 @@ export default function SupplierUpsertDialog({ open, onOpenChange, supplier, onS
               <input
                 maxLength={100}
                 value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="Antofagasta"
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 transition-colors"
+                onChange={(e) => {
+                    setCity(e.target.value);
+                    if (errors.city) setErrors(prev => ({...prev, city: ""}));
+                }}
+                onBlur={(e) => validateField('city', e.target.value)}
+                placeholder="Ej: Antofagasta"
+                className={cn(
+                    "w-full rounded-md border px-3 py-2 text-sm focus:outline-none transition-colors",
+                    errors.city ? "border-red-500 focus:ring-1 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                )}
                 disabled={loading}
               />
+               {errors.city && <p className="text-xs text-red-500 mt-1">{errors.city}</p>}
             </div>
 
-            {/* Categorías (Checkboxes para UX estandarizada) */}
+            {/* Categorías */}
             <div className="space-y-2 md:col-span-2 mt-2">
               <label className="text-xs font-semibold text-slate-600">
-                Categorías de Productos que ofrece (Selección Múltiple)
+                Categorías de Productos que ofrece
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-100">
                 {COMMON_CATEGORIES.map((cat) => (
@@ -262,7 +412,7 @@ export default function SupplierUpsertDialog({ open, onOpenChange, supplier, onS
             type="submit"
             form="supplier-form"
             disabled={loading}
-            className="rounded-xl bg-red-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+            className="rounded-xl bg-blue-600 px-6 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
           >
             {loading ? "Guardando..." : isEdit ? "Guardar Cambios" : "Crear Proveedor"}
           </button>
