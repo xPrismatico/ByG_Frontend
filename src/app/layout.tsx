@@ -4,6 +4,7 @@ import "./globals.css";
 
 // 1. Importa el Provider que acabas de crear (ajusta la ruta según dónde lo guardaste)
 import Providers from "@/components/Providers"; 
+import { Navbar } from '../components/navbar/Navbar';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -23,6 +24,7 @@ export default function RootLayout({
         
         {/* 2. Envuelve {children} con el Provider */}
         <Providers>
+          <Navbar />
           {children}
         </Providers>
 
