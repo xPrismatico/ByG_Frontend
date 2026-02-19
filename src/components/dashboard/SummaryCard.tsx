@@ -1,30 +1,46 @@
 // src/components/dashboard/SummaryCard.tsx
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowUpRight, LucideIcon } from "lucide-react";
+import { useRouter } from "next/navigation"; //
 
 interface SummaryCardProps {
   title: string;
-  value: number | string;
+  value: number;
   icon: LucideIcon;
-  colorClass: string; // Ejemplo: "border-l-blue-500 text-blue-600"
+  colorClass: string;
   linkText: string;
+  href: string; //
 }
 
-export function SummaryCard({ title, value, icon: Icon, colorClass, linkText }: SummaryCardProps) {
+export function SummaryCard({ title, value, icon: Icon, colorClass, linkText, href }: SummaryCardProps) {
+  const router = useRouter(); //
+  
+  // Separamos las clases de color para aplicarlas correctamente
+  const classes = colorClass.split(' ');
+  const borderColor = classes[0]; // ej: border-l-blue-500
+  const textColor = classes[1];   // ej: text-blue-600
+
+  const handleNavigation = (e: React.MouseEvent) => {
+    e.preventDefault();
+    router.push(href); //
+  };
+
   return (
-    <Card className={`border-l-4 shadow-sm ${colorClass.split(' ')[0]}`}>
+    <Card className={`border-l-4 shadow-sm ${borderColor}`}>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className={`text-sm font-medium ${colorClass.split(' ')[1]}`}>
-          {title}
-        </CardTitle>
-        <Icon className={`h-4 w-4 ${colorClass.split(' ')[1].replace('600', '500')}`} />
+        <CardTitle className={`text-sm font-medium ${textColor}`}>{title}</CardTitle>
+        <Icon className={`h-4 w-4 ${textColor}`} />
       </CardHeader>
       <CardContent>
-        <div className={`text-4xl font-bold ${colorClass.split(' ')[1].replace('600', '700')}`}>
-          {value}
-        </div>
-        <Button variant="link" className={`px-0 h-auto mt-2 ${colorClass.split(' ')[1]}`}>
+        <div className="text-4xl font-bold text-gray-800">{value}</div>
+        <Button 
+          variant="link" 
+          className={`px-0 h-auto mt-2 font-semibold ${textColor}`}
+          onClick={handleNavigation} //
+        >
           {linkText} <ArrowUpRight className="ml-1 h-3 w-3" />
         </Button>
       </CardContent>
