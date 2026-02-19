@@ -4,13 +4,14 @@ export interface QuoteDto {
   status: string;
   date: string;
   totalPrice: number | null;
-  items: string[];
+  items: QuoteItemDetailDto[];
   supplierName?: string; 
 }
 
 export interface QuoteFilters {
   status?: string;
   searchTerm?: string;
+  purchaseId?: number;
   orderBy?: string;
   pageNumber?: number;
   pageSize?: number;
@@ -28,4 +29,11 @@ export interface CreateQuoteDto {
   date: string;
   totalPrice: number;
   quoteItems: CreateQuoteItemDto[];
+}
+
+export interface QuoteItemDetailDto {
+  name: string;
+  quantity: number;
+  unitPrice: number | null;
+  unit: string;
 }
