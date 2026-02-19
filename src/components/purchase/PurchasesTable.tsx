@@ -9,6 +9,7 @@ interface Props {
   onEdit: (p: PurchaseSummary) => void
   onDelete: (p: PurchaseSummary) => void | Promise<void>
   onView: (p: PurchaseSummary) => void
+  editingId?: number | null
 }
 
 const formatDateTime = (isoDate: string) => {
@@ -48,6 +49,7 @@ export default function PurchasesTable({
   onView,
   onEdit,
   onDelete,
+  editingId,
 }: Props) {
   return (
     <div className="overflow-x-auto rounded-2xl border bg-white shadow-sm">
@@ -127,11 +129,17 @@ export default function PurchasesTable({
                     <button
                       type="button"
                       onClick={() => onEdit(p)}
-                      className="inline-flex items-center gap-1.5 rounded-md border p-2 text-slate-600 hover:bg-slate-100 hover:text-blue-600 transition-colors bg-white font-medium text-xs shadow-sm"
+                      disabled={editingId === p.id} // Deshabilitar si está cargando
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-md border p-2 text-slate-600 hover:bg-slate-100 hover:text-blue-600 transition-colors bg-white font-medium text-xs shadow-sm",
+                        editingId === p.id && "opacity-50 cursor-wait"
+                      )}
                       title="Editar Datos de la Compra"
                     >
                       <Pencil className="h-4 w-4" />
-                      <span className="hidden sm:inline">Editar</span>
+                      <span className="hidden sm:inline">
+                        {editingId === p.id ? "Cargando..." : "Editar"} 
+                      </span>
                     </button>
 
                     {/* Botón Eliminar */}

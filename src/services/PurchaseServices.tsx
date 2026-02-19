@@ -1,4 +1,5 @@
 import { ApiBackend } from '@/clients/Axios';
+import { PagedResponse } from '@/interfaces/PagedResponse';
 import { ResponseAPI } from '@/interfaces/ResponseAPI';
 import {
     PurchaseSummary,
@@ -7,6 +8,7 @@ import {
     PurchaseUpdate
 } from '@/interfaces/purchase';
 import { AxiosError } from 'axios';
+
 
 // Ruta base para el controlador de Compras
 const CONTROLLER_URL = '/api/purchase';
@@ -32,11 +34,23 @@ const handleApiError = (error: unknown): ResponseAPI<any> => {
 export const PurchaseServices = {
     /**
      * Obtiene la lista resumida de todas las compras para la tabla principal.
-     * @returns Promesa con arreglo de PurchaseSummary ordenado por fecha de solicitud.
+     * @returns Promesa con arreglo de PurchaseSummary ordenado por fecha de solicitud y paginado.
      */
-    getPurchases: async (): Promise<ResponseAPI<PurchaseSummary[]>> => {
+    getPurchases: async (params: { 
+        search?: string; 
+        status?: string; 
+        startDate?: string; 
+        endDate?: string; 
+        sortBy?: string; 
+        pageNumber: number; 
+        pageSize?: number 
+    }): Promise<ResponseAPI<PagedResponse<PurchaseSummary>>> => {
         try {
-            const response = await ApiBackend.get<ResponseAPI<PurchaseSummary[]>>(CONTROLLER_URL);
+            const cleanParams = Object.fromEntries(
+                Object.entries(params).filter(([_, v]) => v !== "" && v !== undefined && v !== null)
+            );
+
+            const response = await ApiBackend.get(`${CONTROLLER_URL}`, { params: cleanParams });
             return response.data;
         } catch (error) {
             return handleApiError(error);
