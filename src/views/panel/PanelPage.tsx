@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ClipboardList, ShoppingCart, FileText, Users, ArrowUpRight, Loader2 } from "lucide-react";
 
-// Importamos tus servicios y tipos
+// Servicios e Interfaces
 import { PurchaseServices } from "@/services/PurchaseServices";
 import { PurchaseSummary } from "@/interfaces/purchase";
 
@@ -21,16 +21,22 @@ export default function PanelPage() {
     const loadDashboard = async () => {
       try {
         setLoading(true);
-        // Llamada a tu servicio centralizado
-        const response = await PurchaseServices.getPurchases();
+        // Ajustamos la llamada al servicio con el parámetro de página requerido
+        const response = await PurchaseServices.getPurchases({ pageNumber: 1, pageSize: 10 });
 
         if (response.success && response.data) {
-          setPurchases(response.data);
-          // Cálculo dinámico de indicadores basado en el status del backend
+          // Si el backend devuelve PagedResponse, la data real está en response.data.data
+          const dataList = Array.isArray(response.data) ? response.data : (response.data as any).data;
+          
+          setPurchases(dataList || []);
+          
+          // Cálculo dinámico para ByG Ingeniería
           setStats(prev => ({
             ...prev,
-            purchases: response.data!.length,
-            quotes: response.data!.filter(p => p.status.toLowerCase().includes("cotización")).length
+            purchases: dataList?.length || 0,
+            quotes: dataList?.filter((p: PurchaseSummary) => 
+                p.status.toLowerCase().includes("cotización")
+            ).length || 0
           }));
         }
       } catch (error) {
@@ -60,41 +66,38 @@ export default function PanelPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <SummaryCard 
-            title="Cotizaciones en Revisión" 
-            value={stats.quotes} 
-            icon={ClipboardList} 
-            colorClass="border-l-blue-500 text-blue-600" 
-            linkText="Ver cotizaciones" // Agregado
-            href="/cotizacion" 
+          title="Cotizaciones en Revisión" 
+          value={stats.quotes} 
+          icon={ClipboardList} 
+          colorClass="border-l-blue-500 text-blue-600" 
+          linkText="Ver cotizaciones" 
+          href="/cotizacion" 
         />
-
         <SummaryCard 
-            title="Compras Esperando Revisión" 
-            value={stats.purchases} 
-            icon={ClipboardList} 
-            colorClass="border-l-blue-500 text-blue-600" 
-            linkText="Ver compras" // Agregado
-            href="/compra" 
+          title="Compras Esperando Revisión" 
+          value={stats.purchases} 
+          icon={ShoppingCart} 
+          colorClass="border-l-yellow-500 text-yellow-600" 
+          linkText="Ver compras" 
+          href="/compra" 
         />
-
         <SummaryCard 
-            title="Órdenes de Compra" 
-            value={stats.orders} 
-            icon={FileText} 
-            colorClass="border-l-green-500 text-green-600" 
-            linkText="Ver órdenes" // Agregado
-            href="/orden-compra" 
+          title="Órdenes de Compra" 
+          value={stats.orders} 
+          icon={FileText} 
+          colorClass="border-l-green-500 text-green-600" 
+          linkText="Ver órdenes" 
+          href="/orden-compra" 
         />
-
         <SummaryCard 
-            title="Proveedores Activos" 
-            value={stats.suppliers} 
-            icon={Users} 
-            colorClass="border-l-red-500 text-red-600" 
-            linkText="Ver proveedores" // Agregado
-            href="/proveedor" 
+          title="Proveedores Activos" 
+          value={stats.suppliers} 
+          icon={Users} 
+          colorClass="border-l-red-500 text-red-600" 
+          linkText="Ver proveedores" 
+          href="/proveedor" 
         />
-        </div>
+      </div>
 
       <Card className="shadow-sm border-none">
         <CardHeader>
