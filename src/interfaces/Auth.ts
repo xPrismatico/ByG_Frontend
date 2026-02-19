@@ -1,13 +1,13 @@
 // src/interfaces/Auth.ts
-
 export interface AuthenticatedUser {
     firstName: string;
     lastName: string;
     email: string;
     phone: string;
     token: string;
+    role: string;
     registered: string; // DateOnly llega como string ISO
-    lastAccess: string | null;
+    lastAccess: string | null; 
     isActive: boolean;
 }
 
@@ -16,4 +16,5 @@ export interface UserSession {
     email: string;
     firstName: string;
     lastName: string;
+    role: string;
 }
