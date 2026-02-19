@@ -13,7 +13,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ViewQuoteDialog } from "./ViewQuoteDialog";
+import { EditQuoteDialog } from "./EditQuoteDialog";
 
+// 1. Agregamos rawQuote a la interfaz para que TypeScript no se queje
 export interface CotizacionUI {
   id: string | number;
   numero: string;
@@ -21,6 +24,7 @@ export interface CotizacionUI {
   fechaRecepcion: string;
   total: number | null;
   estado: string;
+  rawQuote?: any; // <-- Dato original del backend
 }
 
 interface QuoteTableProps {
@@ -87,18 +91,17 @@ export function QuoteTable({ cotizaciones }: QuoteTableProps) {
                   </TableCell>
                   <TableCell>{renderEstadoBadge(cot.estado)}</TableCell>
                   
+                  {/* 2. AQUÍ ESTABA EL ERROR: Solo dejamos un TableCell principal */}
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2 items-center">
-                      <Button variant="outline" size="sm" className="h-8 text-gray-600 border-gray-200 hover:bg-gray-50">
-                        <Eye className="w-4 h-4 mr-1.5" /> Ver
-                      </Button>
+                      
+                      {/* 3. Pasamos el rawQuote al botón VER */}
+                      <ViewQuoteDialog quote={cot.rawQuote} />
                       
                       {/* Ocultar "Editar" si ya está Aprobada o Rechazada */}
-                      {cot.estado?.toLowerCase() === "pendiente" && (
-                        <Button variant="outline" size="sm" className="h-8 text-gray-600 border-gray-200 hover:bg-gray-50">
-                          <Edit className="w-4 h-4 mr-1.5" /> Editar
-                        </Button>
-                      )}
+                        {cot.estado?.toLowerCase() === "pendiente" && (
+                        <EditQuoteDialog quote={cot.rawQuote} />
+                        )}
 
                       <Button variant="outline" size="sm" className="h-8 w-8 px-0 text-gray-600 border-gray-200 hover:bg-gray-50" title="Descargar PDF">
                         <Download className="w-4 h-4" />

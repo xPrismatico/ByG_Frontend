@@ -1,61 +1,37 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import QuoteFilter from "@/components/Quotes/QuoteFilters";
-import { QuoteTable, CotizacionUI } from "@/components/Quotes/QuoteTable";
-
+import { QuoteTable, CotizacionUI } from "@/components/Quotes/QuoteTable"; // Asegurate de la ruta
 import { QuoteFilters, QuoteDto } from "@/interfaces/Quote";
 import { QuoteServices } from "@/services/QuoteServices";
 import { CreateQuoteDialog } from "@/components/Quotes/CreateQuoteDialog";
-import Cotizaciones from '../../app/cotizacion/page';
 
 export default function QuoteList() {
   const [filters, setFilters] = useState<QuoteFilters>({});
 
-  const {
-    data: quotesRaw,
-    isLoading,
-    isError
-  } = useQuery<QuoteDto[]>({
+  const { data: quotesRaw, isLoading, isError } = useQuery<QuoteDto[]>({
     queryKey: ['quotes', filters],
     queryFn: () => QuoteServices.fetchQuotes(filters),
   });
 
-  // Mapeamos los datos de .NET a la estructura que requiere nuestra tabla
+  // Mapeamos los datos
   const cotizacionesMapeadas: CotizacionUI[] = quotesRaw?.map((q) => ({
     id: q.id,
     numero: q.number,
-    // Como DTO no tiene proveedor aún, usamos un fallback temporal
-    proveedor: q.supplierName || "Proveedor No Identificado", 
+    proveedor: q.supplierName || "Proveedor No Identificado",
     fechaRecepcion: q.date,
     total: q.totalPrice,
     estado: q.status,
+    
+    // ✅ ESTA ES LA LÍNEA MÁGICA: Guardamos la data original para el modal VER
+    rawQuote: q 
   })) || [];
 
-
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-6 py-6 max-w-6xl">
-        <Skeleton className="h-12 w-1/3 mb-4" />
-        <Skeleton className="h-24 w-full mb-4" />
-        <Skeleton className="h-96 w-full" />
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="container mx-auto px-6 py-10 flex flex-col items-center justify-center space-y-4">
-        <h1 className="text-3xl font-bold text-red-600">Error</h1>
-        <p className="text-gray-600">No se pudieron obtener las cotizaciones.</p>
-      </div>
-    );
-  }
+  if (isLoading) return <div className="p-10"><Skeleton className="h-10 w-full mb-4"/><Skeleton className="h-64 w-full"/></div>;
+  if (isError) return <div className="p-10 text-red-500">Error al cargar cotizaciones</div>;
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6 bg-gray-50/30 min-h-screen">
@@ -67,15 +43,13 @@ export default function QuoteList() {
           <p className="text-gray-500 mt-1">Administra cotizaciones de proveedores</p>
         </div>
         
+        {/* Aquí llamamos al componente que arreglamos arriba */}
         <div className="flex-shrink-0">
-        <CreateQuoteDialog />
+          <CreateQuoteDialog />
         </div>
       </div>
 
-      {/* COMPONENTE DE FILTROS */}
       <QuoteFilter onFilterChange={setFilters} />
-
-      {/* COMPONENTE DE LA TABLA */}
       <QuoteTable cotizaciones={cotizacionesMapeadas} />
 
     </div>

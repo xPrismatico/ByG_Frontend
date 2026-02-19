@@ -1,203 +1,222 @@
 "use client";
 
 import { useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Plus, FileText, Calendar, DollarSign, Trash2, PlusCircle } from "lucide-react";
-import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Trash2, FileText, CalendarDays } from "lucide-react";
+import { QuoteServices } from "@/services/QuoteServices";
 
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader,
-  DialogTitle, DialogTrigger, DialogFooter, DialogClose
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
 } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { QuoteServices } from "@/services/QuoteServices";
-import { CreateQuoteDto } from "@/interfaces/Quote";
-
-// 1. Esquema con validación para arreglo de objetos (Tratados como string para evitar errores)
-const formSchema = z.object({
-  number: z.string().min(3, { message: "Requerido (ej: COT-001)." }),
-  date: z.string().min(1, { message: "La fecha es requerida." }),
-  items: z.array(z.object({
-    name: z.string().min(1, { message: "Requerido." }),
-    // Usamos string y validamos convirtiendo a número internamente
-    quantity: z.string().refine((val) => Number(val) >= 1, { message: "Mín. 1" }),
-    unitPrice: z.string().refine((val) => Number(val) >= 0, { message: "No válido." })
-  })).min(1, { message: "Debes agregar al menos un ítem." })
-});
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function CreateQuoteDialog() {
   const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: { 
-      number: "", 
-      date: new Date().toISOString().split('T')[0], 
-      // Iniciamos con strings vacíos o "1" en vez de números puros
-      items: [{ name: "", quantity: "1", unitPrice: "0" }] 
-    },
-  });
+  // Estados del formulario
+  const [numero, setNumero] = useState("");
+  const [fecha, setFecha] = useState("");
+  const [productos, setProductos] = useState([{ name: "", quantity: 1, unitPrice: 0 }]);
 
-  const { fields, append, remove } = useFieldArray({
-    control: form.control as any,
-    name: "items"
-  });
-
-  // Calculamos el total convirtiendo los strings a números en vivo
-  const watchedItems = form.watch("items");
-  const totalPrice = watchedItems.reduce((acc, curr) => {
-    return acc + (Number(curr.quantity) * Number(curr.unitPrice));
-  }, 0);
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      const payload: CreateQuoteDto = {
-        number: values.number,
-        status: "Pendiente",
-        date: values.date,
-        totalPrice: totalPrice, // El total que ya calculamos
-        // Transformamos el array para que tu backend reciba números reales
-        quoteItems: values.items.map(item => ({
-          name: item.name,
-          quantity: Number(item.quantity),
-          unitPrice: Number(item.unitPrice)
-        }))
-      };
-
-      await QuoteServices.createQuote(payload);
-      toast.success("Cotización registrada exitosamente.");
-      queryClient.invalidateQueries({ queryKey: ['quotes'] });
+  // Lógica de Mutación (Guardar en backend)
+  const createMutation = useMutation({
+    mutationFn: QuoteServices.createQuote,
+    onSuccess: () => {
+      setOpen(false); // Cerramos el modal
+      queryClient.invalidateQueries({ queryKey: ["quotes"] }); // Actualizamos la tabla
       
-      setOpen(false); 
-      form.reset();   
-    } catch (error) {
-      toast.error("Ocurrió un error al registrar la cotización.");
+      // Limpiamos el formulario
+      setNumero("");
+      setFecha("");
+      setProductos([{ name: "", quantity: 1, unitPrice: 0 }]);
+    },
+    onError: (error: any) => {
+      console.error("Falló al guardar:", error);
+      alert("Hubo un error al guardar: " + error.message);
     }
-  }
+  });
+
+  // Funciones auxiliares
+  const agregarProducto = () => {
+    setProductos([...productos, { name: "", quantity: 1, unitPrice: 0 }]);
+  };
+
+  const eliminarProducto = (index: number) => {
+    const nuevosProductos = productos.filter((_, i) => i !== index);
+    setProductos(nuevosProductos);
+  };
+
+  const actualizarProducto = (index: number, campo: string, valor: string | number) => {
+    const nuevosProductos = [...productos];
+    // @ts-ignore
+    nuevosProductos[index] = { ...nuevosProductos[index], [campo]: valor };
+    setProductos(nuevosProductos);
+  };
+
+  const totalCotizacion = productos.reduce((acc, curr) => acc + (curr.quantity * curr.unitPrice), 0);
+
+  const handleGuardar = () => {
+    if (!numero || !fecha) {
+      alert("Por favor, completa los campos obligatorios.");
+      return;
+    }
+
+    const payload = {
+      number: numero,
+      status: "Pendiente",
+      date: fecha,
+      totalPrice: totalCotizacion,
+      observations: "", 
+      quoteItems: productos.map((p) => ({
+        name: p.name,
+        quantity: Number(p.quantity),
+        unitPrice: Number(p.unitPrice),
+        unit: "Unidad"
+      })),
+      supplierId: 0, 
+      purchaseId: 0
+    };
+
+    createMutation.mutate(payload);
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="bg-[#E33439] hover:bg-[#c12a2f] text-white">
-            <Plus className="w-4 h-4 mr-2" /> Nueva Cotización
+          <Plus className="w-4 h-4 mr-2" /> Nueva Cotización
         </Button>
-        </DialogTrigger>
-      
-      <DialogContent className="sm:max-w-[700px] bg-white max-h-[90vh] overflow-y-auto">
+      </DialogTrigger>
+
+      <DialogContent className="sm:max-w-[650px] bg-white max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Registrar Cotización</DialogTitle>
-          <DialogDescription>Añade los productos con sus respectivos precios.</DialogDescription>
+          <DialogDescription>
+            Añade los productos con sus respectivos precios.
+          </DialogDescription>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 py-4">
+        {/* --- INICIO DEL FORMULARIO --- */}
+        <div className="space-y-6 py-4">
+          {/* Fila: N° Cotización y Fecha */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="numero">N° de Cotización *</Label>
+              <div className="relative">
+                <FileText className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
+                <Input
+                  id="numero"
+                  placeholder="COT-2026-002"
+                  className="pl-9"
+                  value={numero}
+                  onChange={(e) => setNumero(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fecha">Fecha de Recepción *</Label>
+              <div className="relative">
+                <CalendarDays className="absolute left-3 top-2.5 h-4 w-4 text-gray-500" />
+                <Input
+                  id="fecha"
+                  type="date"
+                  className="pl-9"
+                  value={fecha}
+                  onChange={(e) => setFecha(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Sección Productos */}
+          <div className="space-y-3">
+            <h3 className="font-semibold text-gray-800">Detalle de Productos</h3>
             
-            <div className="grid grid-cols-2 gap-4">
-              <FormField control={form.control as any} name="number" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>N° de Cotización *</FormLabel>
-                  <div className="relative">
-                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <FormControl><Input className="pl-9" placeholder="Ej: COT-2026-005" {...field} /></FormControl>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )} />
-
-              <FormField control={form.control as any} name="date" render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fecha de Recepción *</FormLabel>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <FormControl><Input type="date" className="pl-9" {...field} /></FormControl>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )} />
+            <div className="grid grid-cols-[1fr_80px_120px_40px] gap-2 mb-2 px-1">
+              <Label className="text-xs text-gray-500 font-bold uppercase">Descripción</Label>
+              <Label className="text-xs text-gray-500 font-bold uppercase text-center">Cant.</Label>
+              <Label className="text-xs text-gray-500 font-bold uppercase text-center">Precio</Label>
+              <div></div>
             </div>
 
-            <div className="space-y-3 bg-gray-50/50 p-4 rounded-lg border border-gray-100">
-              <div className="flex justify-between items-center mb-2">
-                <FormLabel className="text-base font-semibold text-gray-800">Detalle de Productos</FormLabel>
-              </div>
-              
-              <div className="grid grid-cols-12 gap-2 text-xs font-semibold text-gray-500 uppercase px-1">
-                <div className="col-span-5">Producto / Descripción</div>
-                <div className="col-span-2 text-center">Cant.</div>
-                <div className="col-span-3 text-right">Precio Unitario</div>
-                <div className="col-span-2"></div>
-              </div>
-
-              {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-12 gap-2 items-start">
-                  
-                  <div className="col-span-5">
-                    <FormField control={form.control as any} name={`items.${index}.name`} render={({ field }) => (
-                      <FormItem><FormControl><Input placeholder="Ej: Cable 10mm" {...field} /></FormControl><FormMessage/></FormItem>
-                    )} />
-                  </div>
-
-                  <div className="col-span-2">
-                    <FormField control={form.control as any} name={`items.${index}.quantity`} render={({ field }) => (
-                      <FormItem><FormControl><Input type="number" min="1" className="text-center" {...field} /></FormControl><FormMessage/></FormItem>
-                    )} />
-                  </div>
-
-                  <div className="col-span-3">
-                    <FormField control={form.control as any} name={`items.${index}.unitPrice`} render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <div className="relative">
-                            <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400" />
-                            <Input type="number" min="0" className="pl-6 text-right" {...field} />
-                          </div>
-                        </FormControl>
-                        <FormMessage/>
-                      </FormItem>
-                    )} />
-                  </div>
-
-                  <div className="col-span-2 flex justify-end">
-                    <Button type="button" variant="ghost" size="icon" className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                      onClick={() => remove(index)} disabled={fields.length === 1}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+            {productos.map((producto, index) => (
+              <div key={index} className="grid grid-cols-[1fr_80px_120px_40px] gap-2 items-center">
+                <Input
+                  placeholder="Ej. Cable"
+                  value={producto.name}
+                  onChange={(e) => actualizarProducto(index, "name", e.target.value)}
+                  className="bg-blue-50/50 border-blue-100"
+                />
+                <Input
+                  type="number"
+                  min="1"
+                  value={producto.quantity}
+                  onChange={(e) => actualizarProducto(index, "quantity", Number(e.target.value))}
+                  className="text-center"
+                />
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-gray-500 text-sm">$</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={producto.unitPrice}
+                    onChange={(e) => actualizarProducto(index, "unitPrice", Number(e.target.value))}
+                    className="pl-7 text-right"
+                  />
                 </div>
-              ))}
-
-              <Button type="button" variant="outline" size="sm" className="w-full mt-2 border-dashed border-2 text-gray-600"
-                onClick={() => append({ name: "", quantity: "1", unitPrice: "0" })}>
-                <PlusCircle className="h-4 w-4 mr-2" /> Agregar otro producto
-              </Button>
-            </div>
-
-            <div className="flex justify-end pt-2">
-              <div className="bg-blue-50 text-blue-900 px-6 py-3 rounded-lg border border-blue-100 flex items-center gap-4">
-                <span className="font-semibold text-sm">TOTAL COTIZACIÓN:</span>
-                <span className="text-2xl font-bold">${totalPrice.toLocaleString('es-CL')}</span>
-              </div>
-            </div>
-
-            <DialogFooter className="gap-2 sm:gap-0 mt-6 pt-4 border-t border-gray-100">
-              <DialogClose asChild>
-                <Button type="button" variant="outline" 
-                    className="border-gray-300">Cancelar
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-red-400 hover:text-red-600 hover:bg-red-50"
+                  onClick={() => eliminarProducto(index)}
+                  disabled={productos.length === 1}
+                >
+                  <Trash2 className="h-4 w-4" />
                 </Button>
-              </DialogClose>
-              <Button type="submit" 
-                className="bg-[#E33439] hover:bg-[#c12a2f] text-white font-bold">Guardar Cotización
-              </Button>
-            </DialogFooter>
+              </div>
+            ))}
 
-          </form>
-        </Form>
+            <Button
+              variant="outline"
+              className="w-full border-dashed border-gray-300 text-gray-600 hover:text-gray-900 mt-2"
+              onClick={agregarProducto}
+            >
+              <Plus className="h-4 w-4 mr-2" /> Agregar otro producto
+            </Button>
+          </div>
+
+          {/* Total */}
+          <div className="bg-blue-50 text-blue-900 p-4 rounded-lg flex justify-end items-center gap-4 border border-blue-100">
+            <span className="font-bold text-sm uppercase tracking-wider text-blue-800">Total Cotización:</span>
+            <span className="text-2xl font-black">${totalCotizacion.toLocaleString("es-CL")}</span>
+          </div>
+        </div>
+        {/* --- FIN DEL FORMULARIO --- */}
+
+        {/* AQUÍ ESTABA TU ERROR ANTES: El footer debe ir ANTES de cerrar DialogContent */}
+        <DialogFooter className="gap-2">
+          <DialogClose asChild>
+            <Button variant="outline">Cancelar</Button>
+          </DialogClose>
+          <Button 
+            className="bg-[#E33439] hover:bg-[#c12a2f] text-white"
+            onClick={handleGuardar}
+            disabled={createMutation.isPending}
+          >
+            {createMutation.isPending ? "Guardando..." : "Guardar Cotización"}
+          </Button>
+        </DialogFooter>
+
       </DialogContent>
     </Dialog>
   );
