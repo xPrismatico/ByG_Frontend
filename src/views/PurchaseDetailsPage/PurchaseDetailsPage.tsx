@@ -8,6 +8,7 @@ import { ArrowLeft, AlertCircle, FileText, Upload, ShoppingCart, ClipboardList, 
 import { cn } from "@/lib/utils"
 import GeneralInfoTab from "@/components/purchase/GeneralInfoTab"
 import ProductsTab from "@/components/purchase/ProductsTab"
+import QuotesComparisonTab from "@/components/Quotes/QuoteComparisonTab"
 
 interface Props {
   purchaseId: number
@@ -143,14 +144,26 @@ export default function PurchaseDetailsPage({ purchaseId }: Props) {
         )}
 
 
-        {/* Sección de Autorizar Cotizaciones para aprobar una Compra. */}
+      {/* Sección de Autorizar Cotizaciones */}
         {activeTab === "quotes" && (
-          <div className="bg-white p-12 rounded-3xl border border-[#F2F2F2] flex flex-col items-center justify-center text-[#2F2F2F] space-y-4">
-            <div className="p-4 bg-slate-50 rounded-full"><BadgeCheck className="h-12 w-12 text-slate-400" /></div>
-            <div className="text-center">
-              <h3 className="text-xl font-bold text-[#1C1C1C]">Panel de Comparación de Cotizaciones</h3>
-              <p className="max-w-md mx-auto mt-2 text-slate-500">En esta sección el Autorizador podrá comparar los precios ingresados y los archivos adjuntos para aprobar una compra.</p>
+          <div className="animate-in slide-in-from-bottom-4 duration-500">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-[#1C1C1C]">Cotizaciones Recibidas</h2>
+              <p className="text-slate-500">Compara los precios y aprueba la cotización para generar la Orden de Compra[cite: 122].</p>
             </div>
+            
+            <QuotesComparisonTab 
+              purchaseId={purchase.id} 
+              purchaseItems={purchase.purchaseItems}
+              onQuoteStatusChanged={() => {
+                // Forzamos la recarga de la compra completa para actualizar los badges/estados
+                const refresh = async () => {
+                   const res = await PurchaseServices.getPurchaseById(purchaseId);
+                   if (res.success && res.data) setPurchase(res.data);
+                };
+                refresh();
+              }} 
+            />
           </div>
         )}
 
