@@ -4,16 +4,20 @@ import Image from "next/image";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
+// Servicios y Storage
+import { AuthServices } from "@/services/AuthServices";
+import { AuthStorage } from "@/services/AuthStorage";
 
 // Componentes de shadcn/ui
-import {Form, FormControl,FormField,FormItem, FormLabel, FormMessage} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// Esquema de validación con Zod
 const formSchema = z.object({
   email: z.string().email({
     message: "Ingrese un correo electrónico válido.",
@@ -26,7 +30,12 @@ const formSchema = z.object({
 });
 
 export default function LoginPage() {
-  // Configuración del formulario
+  const router = useRouter();
+  
+  // Estados para manejar errores de la API
+  const [errors, setErrors] = useState<string | null>(null);
+  const [errorBool, setErrorBool] = useState<boolean>(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -35,29 +44,37 @@ export default function LoginPage() {
     },
   });
 
-  const [errors,  ] = useState<string | null>(null);
-  const [errorBool] = useState<boolean>(false);
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setErrorBool(false);
+    setErrors(null);
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    console.log("Datos de inicio de sesión:", values);
-  };
+    try {
+      const response = await AuthServices.login(values);
+
+      if (response.success) {
+        AuthStorage.saveSession(response.data);
+        router.push("/");
+        router.refresh();
+      }
+    } catch (error: any) {
+      setErrorBool(true);
+      // Aseguramos que 'errors' sea un string para evitar el error de React Child
+      setErrors(typeof error === 'string' ? error : (error.message || "Error al iniciar sesión"));
+    }
+  }; // <-- Verifica que esta llave cierre correctamente 'onSubmit'
 
   return (
     <main 
       className="relative flex justify-center items-center min-h-screen w-full bg-cover bg-center bg-no-repeat font-sans"
       style={{ backgroundImage: "url('/LoginFondo.jpg')" }}
     >
-      {/* Capa oscura para mejorar contraste */}
       <div className="absolute inset-0 bg-black/40 z-0" />
 
-      {/* Contenedor del Formulario */}
       <Card className="z-10 w-full max-w-md border-none bg-white/95 backdrop-blur-md shadow-2xl mx-4">
         <CardHeader className="flex flex-col items-center justify-center space-y-4 pb-2">
-          
-          {/* Logo de ByG Ingeniería */}
           <div className="relative w-24 h-24 overflow-hidden rounded-xl shadow-sm">
             <Image
-              src="/logoByG.png" // Asegúrate de que esté en public/logo-byg.png
+              src="/logoByG.png"
               alt="Logo ByG Ingeniería"
               fill
               className="object-contain p-2"
@@ -65,7 +82,6 @@ export default function LoginPage() {
             />
           </div>
 
-          {/* Títulos del Sistema */}
           <div className="text-center space-y-1">
             <CardTitle className="text-3xl font-bold tracking-tight text-gray-900">
               ByG Ingeniería
@@ -80,7 +96,6 @@ export default function LoginPage() {
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               
-              {/* Campo Email */}
               <FormField
                 control={form.control}
                 name="email"
@@ -99,7 +114,6 @@ export default function LoginPage() {
                 )}
               />
 
-              {/* Campo Contraseña */}
               <FormField
                 control={form.control}
                 name="password"
@@ -120,24 +134,16 @@ export default function LoginPage() {
               />
 
               {errorBool && (
-                <Alert variant="default" className="border-red-500 bg-red-100 text-red-900 md:col-span-2">
+                <Alert variant="default" className="border-red-500 bg-red-100 text-red-900">
                     <AlertTitle className="flex items-center gap-2">
-                        <svg
-                            className="h-5 w-5 text-red-600"
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                        >
-                            <path
-                                fillRule="evenodd"
-                                d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-5h2v2h-2v-2zm0-6h2v4h-2V7z"
-                                clipRule="evenodd"
-                            />
+                        <svg className="h-5 w-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-5h2v2h-2v-2zm0-6h2v4h-2V7z" clipRule="evenodd" />
                         </svg>
                         ¡Error!
                     </AlertTitle>
                     <AlertDescription>{errors}</AlertDescription>
                 </Alert>
-            )}
+              )}
 
               <Button 
                 type="submit" 

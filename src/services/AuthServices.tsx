@@ -1,40 +1,29 @@
+// src/services/AuthServices.ts
 import { ApiBackend } from "@/clients/Axios";
 import { ResponseAPI } from "@/interfaces/ResponseAPI";
-import { AuthenticatedUserDto, NewUserDto } from "@/interfaces/Users";
+import { AuthenticatedUserDto, NewUserDto, LoginDto } from "@/interfaces/Users";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5280/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5280';
 
 export const AuthServices = {
-    async login(values: { email: string; password: string }) {
+    async login(data: LoginDto) {
         try {
-            // El backend retorna un AuthenticatedUserDto
+            // Asegúrate de que no haya una doble barra // entre API_URL y Auth
             const response = await ApiBackend.post<ResponseAPI<AuthenticatedUserDto>>(
-                `${API_URL}/Auth/login`, // Ajustado a la ruta del AuthController
-                values,
-                { headers: { "Content-Type": "application/json" } }
+                `${API_URL}/api/Auth/login`, 
+                data
             );
             return response.data;
         } catch (error: any) {
-            const backendError = error.response?.data;
-            if (backendError?.errors && Array.isArray(backendError.errors) && backendError.errors.length > 0) {
-                throw backendError.errors.join(" | ");
-            }
-            throw backendError?.message || "Error al iniciar sesión.";
+            // Si el error es 404, imprimimos la URL exacta que falló
+            console.error("URL intentada:", `${API_URL}/Auth/login`);
+            throw error.response?.data?.message || "Servidor no encontrado";
         }
     },
 
-
-    
-    async register(values: {
-        firstName: string;
-        lastName: string;
-        email: string;
-        password: string;
-        confirmPassword: string;
-        role: string;
-    }) {
+    async register(values: any) {
         try {
-            // El backend retorna un NewUserDto
+            // El backend retorna NewUserDto tras el registro
             const response = await ApiBackend.post<ResponseAPI<NewUserDto>>(
                 `${API_URL}/Auth/register`,
                 values,
@@ -43,10 +32,10 @@ export const AuthServices = {
             return response.data;
         } catch (error: any) {
             const backendError = error.response?.data;
-            if (backendError?.errors && Array.isArray(backendError.errors) && backendError.errors.length > 0) {
+            if (backendError?.errors && Array.isArray(backendError.errors)) {
                 throw backendError.errors.join(" | ");
             }
             throw backendError?.message || "Error al registrar usuario.";
         }
-    },
+    }
 };
