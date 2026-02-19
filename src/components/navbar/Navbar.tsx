@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils"
 
 // Todas las rutas del sistema habilitadas para desarrollo
 const navItems = [
-  { label: "Panel de Control", href: "/panel", icon: LayoutDashboard },
+  { label: "Panel de Control", href: "/", icon: LayoutDashboard },
   { label: "Compras", href: "/compra", icon: ShoppingCart },
   { label: "Cotizaciones", href: "/cotizacion", icon: FileText },
   { label: "Órdenes de Compra", href: "/orden-compra", icon: ClipboardList },
