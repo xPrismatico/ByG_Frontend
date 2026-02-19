@@ -34,3 +34,10 @@ export interface UserFilters {
     pageNumber?: number;
     pageSize?: number;
 }
+
+
+
+export interface LoginDto {
+    email: string;
+    password: string;
+}
