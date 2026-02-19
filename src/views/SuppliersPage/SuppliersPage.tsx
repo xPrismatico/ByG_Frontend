@@ -257,7 +257,7 @@ export default function SuppliersPage() {
         onSubmit={handleUpsertSubmit}
       />
 
-        {/* ✅ NUEVO: Instanciamos el Dialog de Detalles al final */}
+        {/* Instanciamos el Dialog de Detalles al final */}
       <SupplierDetailsDialog
         open={detailsOpen}
         onOpenChange={(open: boolean) => {
