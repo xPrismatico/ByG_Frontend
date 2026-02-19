@@ -1,5 +1,6 @@
 // src/services/AuthServices.ts
 import { ApiBackend } from "@/clients/Axios";
+import { AuthenticatedUser } from "@/interfaces/Auth";
 import { ResponseAPI } from "@/interfaces/ResponseAPI";
 import { AuthenticatedUserDto, NewUserDto, LoginDto } from "@/interfaces/Users";
 
@@ -9,7 +10,7 @@ export const AuthServices = {
     async login(data: LoginDto) {
         try {
             // Asegúrate de que no haya una doble barra // entre API_URL y Auth
-            const response = await ApiBackend.post<ResponseAPI<AuthenticatedUserDto>>(
+            const response = await ApiBackend.post<ResponseAPI<AuthenticatedUser>>(
                 `${API_URL}/api/Auth/login`, 
                 data
             );

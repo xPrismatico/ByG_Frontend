@@ -10,7 +10,8 @@ export const AuthStorage = {
     localStorage.setItem(USER_KEY, JSON.stringify({ 
       email: user.email, 
       firstName: user.firstName, 
-      lastName: user.lastName 
+      lastName: user.lastName,
+      role: user.role
     }));
   },
 

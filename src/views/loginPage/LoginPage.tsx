@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAuth } from "@/contexts/AuthContext";
 
 const formSchema = z.object({
   email: z.string().email({
@@ -31,6 +32,7 @@ const formSchema = z.object({
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   
   // Estados para manejar errores de la API
   const [errors, setErrors] = useState<string | null>(null);
@@ -52,9 +54,10 @@ export default function LoginPage() {
       const response = await AuthServices.login(values);
 
       if (response.success) {
-        AuthStorage.saveSession(response.data);
+        //Usamos login() del contexto
+        login(response.data); 
+        
         router.push("/");
-        router.refresh();
       }
     } catch (error: any) {
       setErrorBool(true);
