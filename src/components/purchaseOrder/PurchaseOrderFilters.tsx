@@ -1,0 +1,126 @@
+"use client"
+import { Search, FilterX } from "lucide-react"
+
+interface Props {
+  search: string;
+  status: string;
+  startDate: string;
+  endDate: string;
+  sortBy: string;
+  onSearchChange: (val: string) => void;
+  onStatusChange: (val: string) => void;
+  onStartDateChange: (val: string) => void;
+  onEndDateChange: (val: string) => void;
+  onSortChange: (val: string) => void;
+  onClear: () => void;
+}
+
+export default function PurchaseOrderFilters({
+  search, status, startDate, endDate, sortBy,
+  onSearchChange, onStatusChange, onStartDateChange, onEndDateChange, onSortChange, onClear
+}: Props) {
+  
+  const today = new Date().toISOString().split("T")[0];
+
+  // UX: Auto-corrección de fechas cruzadas
+  const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val && endDate && val > endDate) onEndDateChange(val);
+    onStartDateChange(val);
+  };
+
+  const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val && startDate && val < startDate) onStartDateChange(val);
+    onEndDateChange(val);
+  };
+
+  return (
+    <div className="bg-[#FFFFFF] p-5 rounded-2xl border border-[#F2F2F2] shadow-sm flex flex-col gap-4">
+      <div className="flex flex-wrap items-end gap-4">
+        
+        {/* Búsqueda Global */}
+        <div className="flex-1 min-w-[240px] space-y-1.5">
+          <label className="text-xs font-semibold text-[#2F2F2F]">Buscar Orden</label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input 
+              type="text"
+              value={search}
+              placeholder="N° OC, Proveedor o Proyecto..."
+              onChange={(e) => onSearchChange(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl text-sm transition-colors outline-none"
+            />
+          </div>
+        </div>
+
+        {/* Estado */}
+        <div className="w-full sm:w-48 space-y-1.5">
+          <label className="text-xs font-semibold text-[#2F2F2F]">Estado</label>
+          <select 
+            value={status}
+            onChange={(e) => onStatusChange(e.target.value)}
+            className="w-full px-3 py-2 bg-slate-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl text-sm transition-colors outline-none cursor-pointer"
+          >
+            <option value="">Todos los estados</option>
+            <option value="Emitida">Emitida (Vigente)</option>
+            <option value="Recepcionada">Material Recibido</option>
+            <option value="Facturada">Factura Recibida</option>
+            <option value="Cerrada">Proceso Cerrado</option>
+            <option value="Anulada">Anulada</option>
+          </select>
+        </div>
+
+        {/* Ordenar Por */}
+        <div className="w-full sm:w-48 space-y-1.5">
+          <label className="text-xs font-semibold text-[#2F2F2F]">Ordenar por</label>
+          <select 
+            value={sortBy}
+            onChange={(e) => onSortChange(e.target.value)}
+            className="w-full px-3 py-2 bg-slate-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl text-sm transition-colors outline-none cursor-pointer"
+          >
+            <option value="date_desc">Más recientes primero</option>
+            <option value="date_asc">Más antiguas primero</option>
+            <option value="amount_desc">Mayor Monto</option>
+            <option value="amount_asc">Menor Monto</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-end gap-4">
+        {/* Rango de Fechas */}
+        <div className="w-full sm:w-48 space-y-1.5">
+          <label className="text-xs font-semibold text-[#2F2F2F]">Emisión desde</label>
+          <input 
+            type="date"
+            value={startDate}
+            max={endDate || today}
+            onChange={handleStartDateChange}
+            className="w-full px-3 py-2 bg-slate-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl text-sm transition-colors outline-none"
+          />
+        </div>
+
+        <div className="w-full sm:w-48 space-y-1.5">
+          <label className="text-xs font-semibold text-[#2F2F2F]">Emisión hasta</label>
+          <input 
+            type="date"
+            value={endDate}
+            min={startDate}
+            max={today}
+            onChange={handleEndDateChange}
+            className="w-full px-3 py-2 bg-slate-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl text-sm transition-colors outline-none"
+          />
+        </div>
+
+        {/* Limpiar */}
+        <button 
+          onClick={onClear}
+          className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500 transition-colors ml-auto sm:ml-0"
+          title="Limpiar filtros"
+        >
+          <FilterX className="h-5 w-5" />
+        </button>
+      </div>
+    </div>
+  )
+}
