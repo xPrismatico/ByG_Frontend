@@ -52,7 +52,7 @@ export default function QuotesComparisonTab({ purchaseId, onQuoteStatusChanged }
     return (
       <div className="bg-white p-12 rounded-3xl border border-[#F2F2F2] flex flex-col items-center justify-center text-slate-500">
         <AlertCircle className="h-12 w-12 mb-4 text-slate-300" />
-        <p className="text-lg font-medium">No se han subido cotizaciones formales aún[cite: 136].</p>
+        <p className="text-lg font-medium">No se han subido cotizaciones formales aún.</p>
         <p className="text-sm">El Gestor de Compras debe cargarlas al sistema.</p>
       </div>
     );
