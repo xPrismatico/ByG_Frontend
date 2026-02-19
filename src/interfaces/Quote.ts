@@ -5,7 +5,6 @@ export interface QuoteDto {
   date: string;
   totalPrice: number | null;
   items: string[];
-  // Nota: Deberás agregar el SupplierName a tu DTO en C# para que esto sea real
   supplierName?: string; 
 }
 

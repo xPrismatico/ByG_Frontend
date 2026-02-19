@@ -2,12 +2,14 @@ import { ApiBackend } from "@/clients/Axios";
 import { ResponseAPI } from "@/interfaces/ResponseAPI";
 import { AuthenticatedUserDto, NewUserDto } from "@/interfaces/Users";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5280/api';
+
 export const AuthServices = {
     async login(values: { email: string; password: string }) {
         try {
             // El backend retorna un AuthenticatedUserDto
             const response = await ApiBackend.post<ResponseAPI<AuthenticatedUserDto>>(
-                "/api/Auth/login", // Ajustado a la ruta del AuthController
+                `${API_URL}/Auth/login`, // Ajustado a la ruta del AuthController
                 values,
                 { headers: { "Content-Type": "application/json" } }
             );
@@ -21,6 +23,8 @@ export const AuthServices = {
         }
     },
 
+
+    
     async register(values: {
         firstName: string;
         lastName: string;
@@ -32,7 +36,7 @@ export const AuthServices = {
         try {
             // El backend retorna un NewUserDto
             const response = await ApiBackend.post<ResponseAPI<NewUserDto>>(
-                "/api/Auth/register",
+                `${API_URL}/Auth/register`,
                 values,
                 { headers: { "Content-Type": "application/json" } }
             );
