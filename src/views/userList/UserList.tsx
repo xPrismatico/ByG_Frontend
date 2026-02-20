@@ -12,19 +12,60 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { UserDto, UserFilters } from "@/interfaces/Users"; 
 import { UserServices } from "@/services/UserServices";
+import { Button } from "@/components/ui/button";
 
 export default function UserList() {
   const [filters, setFilters] = useState<UserFilters>({});
+
+  const query = useQuery({
+    queryKey: ['usuarios', filters],
+    queryFn: () => UserServices.fetchUsers(filters),
+    retry: 1,
+  });
 
   const {
     data: usuariosRaw,
     isLoading,
     isError,
-    refetch
-  } = useQuery<UserDto[]>({
+    error,
+    refetch // Ahora TypeScript sabrá que esto es una función
+  } = useQuery<UserDto[], Error>({ // <--- AQUÍ ESTÁ EL CAMBIO IMPORTANTE: Agregamos ", Error"
     queryKey: ['usuarios', filters],
     queryFn: () => UserServices.fetchUsers(filters),
+    retry: 1,
   });
+
+  // MANEJO DE ERRORES VISUAL
+  if (isError) {
+    // Detectamos si es un error 403 (Prohibido)
+    // Nota: Como definimos 'Error' arriba, a veces necesitamos 'any' para acceder a 'response' de Axios
+    const isForbidden = (error as any)?.response?.status === 403;
+
+    if (isForbidden) {
+      return (
+        <div className="flex h-[80vh] flex-col items-center justify-center space-y-4">
+          <Shield className="h-20 w-20 text-red-500" />
+          <h2 className="text-2xl font-bold text-gray-800">Acceso Denegado</h2>
+          <p className="text-gray-600 text-center max-w-md">
+            No tienes permisos para ver esta sección. <br/>
+            Esta área es exclusiva para Administradores.
+          </p>
+          <Button variant="outline" onClick={() => window.history.back()}>
+            Volver atrás
+          </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="container mx-auto px-6 py-10 flex flex-col items-center justify-center space-y-4">
+        <h1 className="text-3xl font-bold text-red-600">Error al cargar usuarios</h1>
+        <p className="text-gray-600">Ocurrió un problema de conexión o permisos.</p>
+        {/* Ahora refetch() funcionará sin error de compilación */}
+        <Button onClick={() => refetch()}>Reintentar</Button>
+      </div>
+    );
+  }
 
   const handleToggleStatus = async (email: string, currentStatus: boolean) => {
     try {
@@ -40,7 +81,8 @@ export default function UserList() {
     ?.filter(user => {
       const r = (filters as any).role;
       if (r && r !== "todos") {
-        return user.role === r;
+        // Aseguramos que la comparación sea segura
+        return user.role?.toLowerCase() === r.toLowerCase();
       }
       return true;
     })
@@ -69,29 +111,16 @@ export default function UserList() {
     );
   }
 
-  if (isError) {
-    return (
-      <div className="container mx-auto px-6 py-10 flex flex-col items-center justify-center space-y-4">
-        <h1 className="text-3xl font-bold text-red-600">Error al cargar usuarios</h1>
-        <p className="text-gray-600">No se pudieron obtener los datos. Verifica tu conexión con el servidor.</p>
-        <button onClick={() => refetch()} className="px-4 py-2 bg-red-100 text-red-700 rounded-md hover:bg-red-200 transition">
-          Reintentar
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6 bg-gray-50/30 min-h-screen">
       
-      {/* CABECERA (Con un solo botón) */}
+      {/* CABECERA */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Gestión de Usuarios</h1>
           <p className="text-gray-500 mt-1">Administra usuarios del sistema y sus roles de acceso</p>
         </div>
         
-        {/* Aquí está el único botón de crear usuario */}
         <div className="flex-shrink-0">
           <CreateUserDialog />
         </div>
@@ -111,6 +140,7 @@ export default function UserList() {
       <UserFilter onFilterChange={setFilters} />
 
       {/* COMPONENTE DE LA TABLA */}
+      {/* Pasar handleToggleStatus si tu tabla tiene botones de activar/desactivar */}
       <UserTable usuarios={usuariosFiltrados} />
 
     </div>
