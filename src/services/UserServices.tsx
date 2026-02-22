@@ -2,7 +2,7 @@ import { ApiBackend } from "@/clients/Axios";
 import { ResponseAPI } from "@/interfaces/ResponseAPI";
 import { UserDto, UserFilters } from "@/interfaces/Users";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5280/api/User';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api/User';
 
 export const UserServices = {
     // GET: /api/User

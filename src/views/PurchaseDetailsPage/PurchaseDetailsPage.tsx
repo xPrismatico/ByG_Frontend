@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 import GeneralInfoTab from "@/components/purchase/GeneralInfoTab"
 import ProductsTab from "@/components/purchase/ProductsTab"
 import QuotesComparisonTab from "@/components/Quotes/QuoteComparisonTab"
+import RequestQuoteTab from "@/components/RequestQuote/RequestQuoteTab"
 
 interface Props {
   purchaseId: number
@@ -133,14 +134,8 @@ export default function PurchaseDetailsPage({ purchaseId }: Props) {
         {activeTab === "products" && <ProductsTab items={purchase.purchaseItems} />}
         
         {/* Sección de Solicitud de Cotización para mostrar la Solicitud y sus Proveedores a quienes se envió */}
-        {activeTab === "request" && (
-          <div className="bg-white p-12 rounded-3xl border border-[#F2F2F2] flex flex-col items-center justify-center text-[#2F2F2F] space-y-4">
-            <div className="p-4 bg-slate-50 rounded-full"><FileText className="h-12 w-12 text-slate-400" /></div>
-            <div className="text-center">
-              <h3 className="text-xl font-bold text-[#1C1C1C]">Solicitud de Cotización (RFQ)</h3>
-              <p className="max-w-md mx-auto mt-2 text-slate-500">Aquí se visualizará el documento PDF generado automáticamente y el listado de proveedores a los que se les envió la solicitud.</p>
-            </div>
-          </div>
+        {activeTab === "request" && purchase && (
+          <RequestQuoteTab data={purchase.requestQuote} />
         )}
 
 

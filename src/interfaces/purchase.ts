@@ -1,5 +1,7 @@
 //src/interfaces/purchase.ts
 
+import { RequestQuote } from "./RequesQuote";
+
 /**
  * Representa un producto/ítem dentro del detalle de una compra.
  * Basado en PurchaseItemDto.
@@ -42,7 +44,7 @@ export interface PurchaseDetail {
     requester: string;
     observations: string | null;
     purchaseItems: PurchaseItem[];
-    hasRequestQuote: boolean;
+    requestQuote: RequestQuote | null; 
     hasPurchaseOrder: boolean;
 }
 
