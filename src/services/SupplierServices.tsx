@@ -1,4 +1,5 @@
 import { ApiBackend } from '@/clients/Axios';
+import { PagedResponse } from '@/interfaces/PagedResponse';
 import { ResponseAPI } from '@/interfaces/ResponseAPI';
 import {
     SupplierSummary,
@@ -8,7 +9,7 @@ import {
 } from '@/interfaces/supplier';
 import { AxiosError } from 'axios';
 
-// Definimos la ruta base para este controlador [cite: 18]
+// Definimos la ruta base para este controlador
 const CONTROLLER_URL = '/api/supplier';
 
 /**
@@ -17,7 +18,7 @@ const CONTROLLER_URL = '/api/supplier';
  */
 const handleApiError = (error: unknown): ResponseAPI<any> => {
     if (error instanceof AxiosError && error.response?.data) {
-        // El backend devolvió un ApiResponse con errores (ej. 404, 409) [cite: 70, 94]
+        // El backend devolvió un ApiResponse con errores (ej. 404, 409)
         return error.response.data as ResponseAPI<any>;
     }
     // Error de red, timeout o error interno no controlado
@@ -31,12 +32,26 @@ const handleApiError = (error: unknown): ResponseAPI<any> => {
 
 export const SupplierService = {
     /**
-     * Obtiene la lista resumida de todos los proveedores[cite: 24, 25].
+     * Obtiene la lista resumida paginada y filtrada los proveedores
      * @returns Una promesa con la respuesta genérica conteniendo un arreglo de SupplierSummary.
      */
-    getSuppliers: async (): Promise<ResponseAPI<SupplierSummary[]>> => {
+getSuppliers: async (params?: { 
+        search?: string; 
+        isActive?: boolean; 
+        productCategory?: string; 
+        startDate?: string; 
+        endDate?: string; 
+        sortBy?: string; 
+        pageNumber?: number; 
+        pageSize?: number 
+    }): Promise<ResponseAPI<PagedResponse<SupplierSummary>>> => {
         try {
-            const response = await ApiBackend.get<ResponseAPI<SupplierSummary[]>>(CONTROLLER_URL);
+            // Limpieza de parámetros: eliminamos undefined, null o strings vacíos
+            const cleanParams = params ? Object.fromEntries(
+                Object.entries(params).filter(([_, v]) => v !== "" && v !== undefined && v !== null)
+            ) : {};
+
+            const response = await ApiBackend.get<ResponseAPI<PagedResponse<SupplierSummary>>>(CONTROLLER_URL, { params: cleanParams });
             return response.data;
         } catch (error) {
             return handleApiError(error);
@@ -44,8 +59,8 @@ export const SupplierService = {
     },
 
     /**
-     * Obtiene el detalle completo de un proveedor por su ID[cite: 52].
-     * @param id Identificador único del proveedor[cite: 53].
+     * Obtiene el detalle completo de un proveedor por su ID
+     * @param id Identificador único del proveedor
      */
     getSupplierById: async (id: number): Promise<ResponseAPI<SupplierDetail>> => {
         try {
@@ -57,22 +72,22 @@ export const SupplierService = {
     },
 
     /**
-     * Crea un nuevo proveedor en el sistema[cite: 83].
+     * Crea un nuevo proveedor en el sistema
      * @param data Objeto con la información requerida (SupplierCreate).
      */
     createSupplier: async (data: SupplierCreate): Promise<ResponseAPI<SupplierDetail>> => {
         try {
             const response = await ApiBackend.post<ResponseAPI<SupplierDetail>>(CONTROLLER_URL, data);
-            return response.data; // Retorna 201 Created con el detalle [cite: 104]
+            return response.data; // Retorna 201 Created con el detalle
         } catch (error) {
             return handleApiError(error);
         }
     },
 
     /**
-     * Actualiza la información de un proveedor existente[cite: 114].
+     * Actualiza la información de un proveedor existente
      * @param id Identificador único del proveedor.
-     * @param data Objeto con la información a actualizar (SupplierUpdate)[cite: 115].
+     * @param data Objeto con la información a actualizar (SupplierUpdate)
      */
     updateSupplier: async (id: number, data: SupplierUpdate): Promise<ResponseAPI<SupplierDetail>> => {
         try {
@@ -84,9 +99,9 @@ export const SupplierService = {
     },
 
     /**
-     * Cambia el estado (Activo/Inactivo) de un proveedor[cite: 153].
+     * Cambia el estado (Activo/Inactivo) de un proveedor
      * @param id Identificador único del proveedor.
-     * @returns Respuesta genérica donde 'data' es un booleano con el nuevo estado[cite: 172].
+     * @returns Respuesta genérica donde 'data' es un booleano con el nuevo estado
      */
     toggleSupplierStatus: async (id: number): Promise<ResponseAPI<boolean>> => {
         try {
@@ -98,8 +113,8 @@ export const SupplierService = {
     },
 
     /**
-     * Elimina definitivamente un proveedor del sistema[cite: 177].
-     * Precaución: Fallará (409 Conflict) si tiene historial asociado[cite: 184].
+     * Elimina definitivamente un proveedor del sistema
+     * Precaución: Fallará (409 Conflict) si tiene historial asociado
      * @param id Identificador único del proveedor.
      */
     deleteSupplier: async (id: number): Promise<ResponseAPI<string>> => {
