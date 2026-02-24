@@ -13,6 +13,8 @@ interface Props {
 }
 
 export default function RequestQuoteTab({ data }: Props) {
+
+  console.log("Datos recibidos en el Tab:", data);
   // ELIMINAMOS TODOS LOS USEEFFECT Y ESTADOS DE LOADING
   const [isDownloading, setIsDownloading] = useState(false)
 
@@ -27,30 +29,30 @@ export default function RequestQuoteTab({ data }: Props) {
   const handleDownloadPdf = async () => {
     setIsDownloading(true);
     try {
-      // Usamos la data que viene por props, ya no 'request' del state
-      const pdfPayload = {
-        Compra: {
-           PurchaseNumber: "REQ-...", // Puedes ajustar esto con props si hace falta
-           ProjectName: "Proyecto...",
-           Requester: "Usuario...",
-           PurchaseItems: [] 
-        },
-        Solicitud: {
-          Number: data.number,
-          Status: data.status
-        }
-      };
+      // 1. Llamamos al servicio (que devuelve un Blob)
+      // Nota: El objeto 'pdfPayload' que tenías antes no se usa porque es una petición GET por ID
+      const blob = await requestQuoteService.downloadPdf(data.id);
 
-      const base64Data = await requestQuoteService.generatePdf(pdfPayload);
-      const linkSource = `data:application/pdf;base64,${base64Data}`;
-      const downloadLink = document.createElement("a");
-      downloadLink.href = linkSource;
-      downloadLink.download = `Solicitud_${data.number}.pdf`;
-      downloadLink.click();
+      // 2. Creamos una URL temporal para el Blob (NO es base64)
+      const url = window.URL.createObjectURL(blob);
+      
+      // 3. Creamos el link de descarga invisible
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Solicitud_${data.number}.pdf`);
+      document.body.appendChild(link);
+      
+      // 4. Disparamos el clic
+      link.click();
+
+      // 5. Limpieza para liberar memoria
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
     } catch (error) {
       console.error("Error al descargar:", error);
-      alert("Error al generar el PDF.");
+      // Tip: Si el backend devuelve el error como JSON dentro del Blob, aquí podrías leerlo
+      alert("Error al generar el PDF. Verifica que la solicitud exista.");
     } finally {
       setIsDownloading(false);
     }

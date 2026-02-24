@@ -91,14 +91,12 @@ export function QuoteTable({ cotizaciones }: QuoteTableProps) {
                   </TableCell>
                   <TableCell>{renderEstadoBadge(cot.estado)}</TableCell>
                   
-                  {/* 2. AQUÍ ESTABA EL ERROR: Solo dejamos un TableCell principal */}
+                 
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2 items-center">
                       
-                      {/* 3. Pasamos el rawQuote al botón VER */}
-                      <ViewQuoteDialog quote={cot.rawQuote} />
                       
-                      {/* Ocultar "Editar" si ya está Aprobada o Rechazada */}
+                      <ViewQuoteDialog quote={cot.rawQuote} />
                         {cot.estado?.toLowerCase() === "pendiente" && (
                         <EditQuoteDialog quote={cot.rawQuote} />
                         )}

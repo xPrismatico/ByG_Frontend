@@ -53,5 +53,24 @@ export const requestQuoteService = {
         // Si el backend devuelve byte[] directamente, Axios suele convertirlo a string.
         const response = await ApiBackend.post(`${CONTROLLER_URL}/create`, payload);
         return response.data; 
+    },
+
+    downloadPdf: async (requestQuoteId: number): Promise<Blob> => {
+        // 1. Verificamos el ID
+        console.log("ID recibido:", requestQuoteId); 
+
+        // 2. Verificamos la URL completa
+        const urlFinal = `${CONTROLLER_URL}/${requestQuoteId}/pdf`;
+        console.log("URL generada:", urlFinal);
+
+        // 3. Verificamos la Base URL de Axios (si puedes importarla o verla en consola)
+        console.log("Base URL Axios:", ApiBackend.defaults.baseURL); 
+
+        const response = await ApiBackend.get(urlFinal, {
+            responseType: "blob",
+            headers: { Accept: "application/pdf" },
+        });
+
+        return response.data as Blob;
     }
 };
