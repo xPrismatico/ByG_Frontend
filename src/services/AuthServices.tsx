@@ -4,7 +4,7 @@ import { AuthenticatedUser } from "@/interfaces/Auth";
 import { ResponseAPI } from "@/interfaces/ResponseAPI";
 import { AuthenticatedUserDto, NewUserDto, LoginDto } from "@/interfaces/Users";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5280';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export const AuthServices = {
     async login(data: LoginDto) {

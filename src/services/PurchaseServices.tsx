@@ -8,6 +8,8 @@ import {
     PurchaseUpdate
 } from '@/interfaces/purchase';
 import { AxiosError } from 'axios';
+import { requestQuoteService } from './RequestQuoteServices';
+import { RequestQuote } from '@/interfaces/RequesQuote';
 
 
 // Ruta base para el controlador de Compras
@@ -131,5 +133,30 @@ export const PurchaseServices = {
         } catch (error) {
             return handleApiError(error);
         }
-    }
+    },
+
+    getAll: async (
+        status?: string,
+        searchTerm?: string,
+        orderBy?: string,
+        pageNumber: number = 1,
+        pageSize: number = 10
+    ): Promise<ResponseAPI<RequestQuote[]>> => {
+        try {
+            // Usamos la ruta relativa
+            const response = await ApiBackend.get<ResponseAPI<RequestQuote[]>>(CONTROLLER_URL, {
+                params: {
+                    status,
+                    searchTerm,
+                    orderBy,
+                    pageNumber,
+                    pageSize
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching request quotes:", error);
+            throw error;
+        }
+    },
 };
