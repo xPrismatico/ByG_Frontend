@@ -23,6 +23,7 @@ export default function RootLayout({
       <body className={inter.className}>
         
         {/* 2. Envuelve {children} con el Provider */}
+
         <Providers>
           <Navbar />
           {children}

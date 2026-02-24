@@ -1,3 +1,5 @@
+//src/interfaces/Quote.ts
+
 export interface QuoteDto {
   id: string | number;
   number: string;
