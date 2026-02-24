@@ -33,6 +33,9 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useQueryClient } from "@tanstack/react-query";
+import { AuthServices } from "@/services/AuthServices";
+import { toast } from "sonner";
 
 const formSchema = z.object({
   nombre: z.string().min(2, { message: "El nombre es requerido." }),
@@ -46,17 +49,50 @@ const formSchema = z.object({
 
 export function CreateUserDialog() {
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { nombre: "", email: "", password: "", rol: "" },
+    defaultValues: {
+      nombre: "", 
+      email: "", 
+      password: "",
+      confirmPassword: "",
+      rol: "" 
+    },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log("Nuevo usuario:", values);
-    setOpen(false); 
-    form.reset();   
-  }
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+      try {
+          // Llamada real al backend
+          await AuthServices.register({
+              FirstName: values.nombre.split(" ")[0], // Ajuste simple para nombre/apellido
+              LastName: values.nombre.split(" ").slice(1).join(" ") || "N/A",
+              Email: values.email,
+              Password: values.password,
+              ConfirmPassword: values.confirmPassword,
+              Role: values.rol
+          });
+
+          toast.success("Usuario creado correctamente");
+          
+          // ESTO RECARGA LA TABLA AUTOMÁTICAMENTE
+          queryClient.invalidateQueries({ queryKey: ['usuarios'] }); 
+          
+          setOpen(false);
+          
+          form.reset({
+            nombre: "", 
+            email: "", 
+            password: "", 
+            confirmPassword: "",
+            rol: "" 
+          });
+          
+      } catch (error: any) {
+          toast.error(error.toString() || "Error al crear usuario");
+      }
+    }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

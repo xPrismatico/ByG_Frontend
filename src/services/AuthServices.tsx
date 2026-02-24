@@ -9,15 +9,14 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5280';
 export const AuthServices = {
     async login(data: LoginDto) {
         try {
-            // Asegúrate de que no haya una doble barra // entre API_URL y Auth
+            // CORREGIDO: Usar ruta relativa con /api
             const response = await ApiBackend.post<ResponseAPI<AuthenticatedUser>>(
-                `${API_URL}/api/Auth/login`, 
+                '/api/Auth/login', 
                 data
             );
             return response.data;
         } catch (error: any) {
-            // Si el error es 404, imprimimos la URL exacta que falló
-            console.error("URL intentada:", `${API_URL}/Auth/login`);
+            console.error("URL intentada:", '/api/Auth/login');
             throw error.response?.data?.message || "Servidor no encontrado";
         }
     },
@@ -26,7 +25,7 @@ export const AuthServices = {
         try {
             // El backend retorna NewUserDto tras el registro
             const response = await ApiBackend.post<ResponseAPI<NewUserDto>>(
-                `${API_URL}/Auth/register`,
+                '/api/Auth/register',
                 values,
                 { headers: { "Content-Type": "application/json" } }
             );
