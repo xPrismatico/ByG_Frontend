@@ -46,3 +46,67 @@ export interface PurchaseOrderCreate {
     approverRut?: string;
     approverRole?: string;
 }
+
+// --- DETALLE DE ORDEN DE COMPRA (Coincide con PurchaseOrderDetailDto) ---
+
+export interface SupplierInfo {
+    rut: string;
+    businessName: string;
+    email: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    contactName?: string;
+}
+
+export interface PurchaseOrderItem {
+    name: string;
+    description?: string;
+    unit: string;
+    quantity: number;
+    unitPrice: number;
+    totalPrice: number;
+}
+
+export interface PurchaseOrderDetail {
+    id: number;
+    orderNumber: string;      // "OC-2026-XXXX"
+    status: string;           // "Emitida", etc.
+    date: string;             // ISO String
+    costCenter?: string;
+    
+    // Referencias
+    purchaseId: number;
+    purchaseNumber: string;
+    projectName: string;
+
+    // Proveedor (Objeto anidado en el DTO)
+    supplier: SupplierInfo;
+
+    // Logística
+    paymentForm?: string;
+    paymentTerms?: string;
+    currency: string;
+    expectedDeliveryDate?: string; // "YYYY-MM-DD"
+    deliveryDeadline?: string;     // ISO String
+    shippingAddress?: string;
+    shippingMethod?: string;
+    observations?: string;
+
+    // Items
+    items: PurchaseOrderItem[];
+
+    // Totales Financieros
+    subTotal: number;
+    discount: number;
+    freightCharge: number;
+    taxExemptTotal: number;
+    taxRate: number;
+    taxAmount: number;
+    totalAmount: number;
+
+    // Aprobación
+    approverName?: string;
+    approverRole?: string;
+    signedAt?: string;
+}

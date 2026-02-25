@@ -22,7 +22,6 @@ export default function PurchaseOrderFilters({
   
   const today = new Date().toISOString().split("T")[0];
 
-  // UX: Auto-corrección de fechas cruzadas
   const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     if (val && endDate && val > endDate) onEndDateChange(val);
@@ -36,18 +35,18 @@ export default function PurchaseOrderFilters({
   };
 
   return (
-    <div className="bg-[#FFFFFF] p-5 rounded-2xl border border-[#F2F2F2] shadow-sm flex flex-col gap-4">
+    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-4">
         
         {/* Búsqueda Global */}
-        <div className="flex-1 min-w-[240px] space-y-1.5">
-          <label className="text-xs font-semibold text-[#2F2F2F]">Buscar Orden</label>
+        <div className="flex-1 min-w-[280px] space-y-1.5">
+          <label className="text-xs font-semibold text-slate-700">Buscar</label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input 
               type="text"
               value={search}
-              placeholder="N° OC, Proveedor o Proyecto..."
+              placeholder="N° de Orden, Proyecto, Proveedor..."
               onChange={(e) => onSearchChange(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-slate-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl text-sm transition-colors outline-none"
             />
@@ -56,24 +55,24 @@ export default function PurchaseOrderFilters({
 
         {/* Estado */}
         <div className="w-full sm:w-48 space-y-1.5">
-          <label className="text-xs font-semibold text-[#2F2F2F]">Estado</label>
+          <label className="text-xs font-semibold text-slate-700">Estado</label>
           <select 
             value={status}
             onChange={(e) => onStatusChange(e.target.value)}
             className="w-full px-3 py-2 bg-slate-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl text-sm transition-colors outline-none cursor-pointer"
           >
-            <option value="">Todos los estados</option>
-            <option value="Emitida">Emitida (Vigente)</option>
-            <option value="Recepcionada">Material Recibido</option>
-            <option value="Facturada">Factura Recibida</option>
-            <option value="Cerrada">Proceso Cerrado</option>
+            <option value="">Todos</option>
+            <option value="Emitida">Emitida</option>
+            <option value="Recepcionada">Recepcionada</option>
+            <option value="Facturada">Facturada</option>
+            <option value="Cerrada">Cerrada</option>
             <option value="Anulada">Anulada</option>
           </select>
         </div>
 
         {/* Ordenar Por */}
         <div className="w-full sm:w-48 space-y-1.5">
-          <label className="text-xs font-semibold text-[#2F2F2F]">Ordenar por</label>
+          <label className="text-xs font-semibold text-slate-700">Ordenar por</label>
           <select 
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
@@ -81,16 +80,17 @@ export default function PurchaseOrderFilters({
           >
             <option value="date_desc">Más recientes primero</option>
             <option value="date_asc">Más antiguas primero</option>
-            <option value="amount_desc">Mayor Monto</option>
-            <option value="amount_asc">Menor Monto</option>
+            <option value="amount_desc">Mayor monto</option>
+            <option value="amount_asc">Menor monto</option>
+            <option value="supplier_asc">Proveedor (A-Z)</option>
           </select>
         </div>
       </div>
 
       <div className="flex flex-wrap items-end gap-4">
-        {/* Rango de Fechas */}
+        {/* Fechas */}
         <div className="w-full sm:w-48 space-y-1.5">
-          <label className="text-xs font-semibold text-[#2F2F2F]">Emisión desde</label>
+          <label className="text-xs font-semibold text-slate-700">Desde fecha</label>
           <input 
             type="date"
             value={startDate}
@@ -101,7 +101,7 @@ export default function PurchaseOrderFilters({
         </div>
 
         <div className="w-full sm:w-48 space-y-1.5">
-          <label className="text-xs font-semibold text-[#2F2F2F]">Emisión hasta</label>
+          <label className="text-xs font-semibold text-slate-700">Hasta fecha</label>
           <input 
             type="date"
             value={endDate}
@@ -112,11 +112,11 @@ export default function PurchaseOrderFilters({
           />
         </div>
 
-        {/* Limpiar */}
+        {/* Botón Limpiar */}
         <button 
           onClick={onClear}
           className="p-2 rounded-xl border border-slate-200 hover:bg-slate-50 text-slate-500 transition-colors ml-auto sm:ml-0"
-          title="Limpiar filtros"
+          title="Limpiar todos los filtros"
         >
           <FilterX className="h-5 w-5" />
         </button>

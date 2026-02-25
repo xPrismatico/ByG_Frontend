@@ -6,46 +6,47 @@ import { ResponseAPI } from '@/interfaces/ResponseAPI';
 import { 
     PurchaseOrderSummary, 
     PurchaseOrderFilters,
-    PurchaseOrderCreate 
+    PurchaseOrderCreate,
+    PurchaseOrderDetail // Importar nueva interfaz
 } from '@/interfaces/purchaseOrder';
 import { AxiosError } from 'axios';
 
-// Ruta base coincidente con [Route("api/[controller]")] en tu PurchaseOrderController
 const CONTROLLER_URL = '/api/purchaseorder';
 
-/**
- * Helper para errores de Axios
- */
 const handleApiError = (error: unknown): ResponseAPI<any> => {
     if (error instanceof AxiosError && error.response?.data) {
+        // A veces la respuesta es un Blob (PDF) y no JSON, hay que tener cuidado
+        if (error.response.data instanceof Blob) {
+             return { success: false, message: "Error al descargar el archivo.", data: null, errors: [] };
+        }
         return error.response.data as ResponseAPI<any>;
     }
     return {
         success: false,
-        message: 'Error de conexión con el servidor.',
+        message: 'Error de conexión.',
         data: null,
-        errors: ['Ocurrió un error inesperado al procesar la solicitud.'],
+        errors: ['Ocurrió un error inesperado.'],
     };
 };
 
 export const PurchaseOrderServices = {
     
-    /**
-     * Obtiene el listado paginado de Órdenes de Compra.
-     * Conecta con: [HttpGet] GetAll([FromQuery] PurchaseOrderQueryParameters queryParams)
-     */
+    // ... (getAll y create se mantienen igual) ...
     getAll: async (params: PurchaseOrderFilters): Promise<ResponseAPI<PagedResponse<PurchaseOrderSummary>>> => {
+        // ... (código existente)
         try {
-            // Limpiamos parámetros vacíos o nulos para limpiar la URL
-            const cleanParams = Object.fromEntries(
-                Object.entries(params).filter(([_, v]) => v !== "" && v !== undefined && v !== null)
-            );
+            const cleanParams = Object.fromEntries(Object.entries(params).filter(([_, v]) => v));
+            const response = await ApiBackend.get(CONTROLLER_URL, { params: cleanParams });
+            return response.data;
+        } catch (error) { return handleApiError(error); }
+    },
 
-            const response = await ApiBackend.get<ResponseAPI<PagedResponse<PurchaseOrderSummary>>>(
-                CONTROLLER_URL, 
-                { params: cleanParams }
-            );
-            
+    /**
+     * Obtiene el detalle completo.
+     */
+    getById: async (id: number): Promise<ResponseAPI<PurchaseOrderDetail>> => { 
+        try {
+            const response = await ApiBackend.get<ResponseAPI<PurchaseOrderDetail>>(`${CONTROLLER_URL}/${id}`);
             return response.data;
         } catch (error) {
             return handleApiError(error);
@@ -53,29 +54,25 @@ export const PurchaseOrderServices = {
     },
 
     /**
-     * Obtiene el detalle de una OC por ID (para la vista individual o PDF).
-     * Conecta con: [HttpGet("{id}")] GetPurchaseOrderById(int id)
-     * Nota: Usaremos 'any' o crearás la interfaz 'PurchaseOrderDetail' cuando hagamos esa vista.
+     * Descarga el PDF de la Orden de Compra.
+     * Retorna un Blob para que el frontend lo maneje.
      */
-    getById: async (id: number): Promise<ResponseAPI<any>> => { 
+    downloadPdf: async (id: number): Promise<Blob | null> => {
         try {
-            const response = await ApiBackend.get(`${CONTROLLER_URL}/${id}`);
+            const response = await ApiBackend.get(`${CONTROLLER_URL}/${id}/pdf`, {
+                responseType: 'blob' // Importante para archivos
+            });
             return response.data;
         } catch (error) {
-            return handleApiError(error);
+            console.error("Error downloading PDF", error);
+            return null;
         }
     },
-
-    /**
-     * Genera una nueva Orden de Compra.
-     * Conecta con: [HttpPost] CreatePurchaseOrder([FromBody] CreatePurchaseOrderDto dto)
-     */
+    
     create: async (data: PurchaseOrderCreate): Promise<ResponseAPI<any>> => {
-        try {
+         try {
             const response = await ApiBackend.post(CONTROLLER_URL, data);
             return response.data;
-        } catch (error) {
-            return handleApiError(error);
-        }
+        } catch (error) { return handleApiError(error); }
     }
 };

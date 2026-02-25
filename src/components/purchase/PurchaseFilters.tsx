@@ -70,7 +70,7 @@ export default function PurchaseFilters({
             onChange={(e) => onStatusChange(e.target.value)}
             className="w-full px-3 py-2 bg-slate-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl text-sm transition-colors outline-none cursor-pointer"
           >
-            <option value="">Todos los estados</option>
+            <option value="">Todos</option>
             <option value="Solicitud recibida">Solicitud recibida</option>
             <option value="Solicitud de cotización enviada">Solicitud de cotización enviada</option>
             <option value="Esperando revisión">Esperando revisión</option>
