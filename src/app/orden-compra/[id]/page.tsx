@@ -1,7 +1,7 @@
 // src/app/orden-compra/[id]/page.tsx
 
 import { Metadata } from "next";
-import PurchaseOrderDetailPage from "@/views/PurchaseOrderPage/PurchaseOrderDetailPage";
+import PurchaseOrderDetailPage from "@/views/PurchaseOrderDetailPage/PurchaseOrderDetailPage";
 
 export const metadata: Metadata = {
   title: "Detalle Orden de Compra | Sistema de Compras ByG",
