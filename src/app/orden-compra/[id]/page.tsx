@@ -1,7 +1,5 @@
-// src/app/orden-compra/[id]/page.tsx
-
-import { Metadata } from "next";
 import PurchaseOrderDetailPage from "@/views/PurchaseOrderDetailPage/PurchaseOrderDetailPage";
+import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Detalle Orden de Compra | Sistema de Compras ByG",
@@ -9,12 +7,21 @@ export const metadata: Metadata = {
 };
 
 interface Props {
-    params: { id: string }
+    params: Promise<{ id: string }> // Cambio clave: params es una Promesa
 }
 
-export default function Page({ params }: Props) {
-  // Convertimos el id de string a number para pasarlo a la vista
-  const orderId = parseInt(params.id);
+
+export default async function Page({ params }: Props) {
+  // Esperamos a que se resuelva la promesa
+  const resolvedParams = await params;
+  
+  // Ahora sí podemos acceder al id de forma segura
+  const orderId = parseInt(resolvedParams.id);
+  
+  // Validación extra por seguridad (opcional pero recomendada)
+  if (isNaN(orderId)) {
+      return <div>Error: ID de orden inválido</div>;
+  }
   
   return <PurchaseOrderDetailPage orderId={orderId} />;
 }
