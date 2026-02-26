@@ -30,6 +30,7 @@ export interface NewUserDto {
 export interface UserFilters {
     isActive?: boolean;
     searchTerm?: string;
+    role?: string;
     registeredFrom?: string; // Formato YYYY-MM-DD
     registeredTo?: string;   // Formato YYYY-MM-DD
     orderBy?: string;

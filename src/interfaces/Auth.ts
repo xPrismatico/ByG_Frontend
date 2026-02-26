@@ -1,14 +1,14 @@
 // src/interfaces/Auth.ts
-export interface AuthenticatedUser {
+export interface AuthenticatedUserDto {
     firstName: string;
     lastName: string;
     email: string;
     phone: string;
     token: string;
-    role: string;
-    registered: string; // DateOnly llega como string ISO
-    lastAccess: string | null; 
     isActive: boolean;
+    role: string; // <--- AGREGA ESTA LÍNEA
+    registered: string;
+    lastAccess: string | null;
 }
 
 // También te servirá para tipar el objeto que guardas en localStorage

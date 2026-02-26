@@ -8,23 +8,13 @@ import {
     PurchaseUpdate
 } from '@/interfaces/purchase';
 import { AxiosError } from 'axios';
-import { requestQuoteService } from './RequestQuoteServices';
-import { RequestQuote } from '@/interfaces/RequesQuote';
 
+const CONTROLLER_URL = 'api/purchase';
 
-// Ruta base para el controlador de Compras
-const CONTROLLER_URL = '/api/purchase';
-
-/**
- * Función auxiliar para manejar errores de Axios y asegurar que 
- * siempre devolvemos una estructura ResponseAPI genérica.
- */
 const handleApiError = (error: unknown): ResponseAPI<any> => {
     if (error instanceof AxiosError && error.response?.data) {
-        // El backend devolvió un ApiResponse con errores (ej. 404, 409 Conflict)
         return error.response.data as ResponseAPI<any>;
     }
-    // Error de red, timeout o error interno 500 no controlado
     return {
         success: false,
         message: 'Error de conexión con el servidor.',
@@ -35,8 +25,9 @@ const handleApiError = (error: unknown): ResponseAPI<any> => {
 
 export const PurchaseServices = {
     /**
-     * Obtiene la lista resumida de todas las compras para la tabla principal.
-     * @returns Promesa con arreglo de PurchaseSummary ordenado por fecha de solicitud y paginado.
+     * Obtiene la lista paginada de compras.
+     * El backend ahora usa ApplySearch (PurchaseNumber, ProjectName, Requester) 
+     * y ApplySorting (Default: RequestDate:desc).
      */
     getPurchases: async (params: { 
         search?: string; 
@@ -52,17 +43,15 @@ export const PurchaseServices = {
                 Object.entries(params).filter(([_, v]) => v !== "" && v !== undefined && v !== null)
             );
 
-            const response = await ApiBackend.get(`${CONTROLLER_URL}`, { params: cleanParams });
+            const response = await ApiBackend.get<ResponseAPI<PagedResponse<PurchaseSummary>>>(CONTROLLER_URL, { 
+                params: cleanParams 
+            });
             return response.data;
         } catch (error) {
             return handleApiError(error);
         }
     },
 
-    /**
-     * Obtiene el detalle completo de una compra por su ID, incluyendo sus productos.
-     * @param id Identificador único de la compra.
-     */
     getPurchaseById: async (id: number): Promise<ResponseAPI<PurchaseDetail>> => {
         try {
             const response = await ApiBackend.get<ResponseAPI<PurchaseDetail>>(`${CONTROLLER_URL}/${id}`);
@@ -72,10 +61,6 @@ export const PurchaseServices = {
         }
     },
 
-    /**
-     * Crea una nueva compra (generalmente accionada desde el sistema externo).
-     * @param data Objeto con la información de la compra y sus productos (PurchaseCreate).
-     */
     createPurchase: async (data: PurchaseCreate): Promise<ResponseAPI<PurchaseDetail>> => {
         try {
             const response = await ApiBackend.post<ResponseAPI<PurchaseDetail>>(CONTROLLER_URL, data);
@@ -85,12 +70,6 @@ export const PurchaseServices = {
         }
     },
 
-    /**
-     * Actualiza la información de la cabecera de una compra existente.
-     * Nota: No actualiza el estado.
-     * @param id Identificador único de la compra.
-     * @param data Objeto con la información a actualizar (PurchaseUpdate).
-     */
     updatePurchase: async (id: number, data: PurchaseUpdate): Promise<ResponseAPI<PurchaseDetail>> => {
         try {
             const response = await ApiBackend.put<ResponseAPI<PurchaseDetail>>(`${CONTROLLER_URL}/${id}`, data);
@@ -101,14 +80,10 @@ export const PurchaseServices = {
     },
 
     /**
-     * Actualiza específicamente el estado de una compra avanzando su flujo.
-     * @param id Identificador único de la compra.
-     * @param newStatus El nuevo estado de la compra (ej. "Esperando revisión").
+     * Actualiza el estado enviando un string JSON-encoded.
      */
     updatePurchaseStatus: async (id: number, newStatus: string): Promise<ResponseAPI<string>> => {
         try {
-            // Nota: .NET exige que un [FromBody] string venga entre comillas (JSON String).
-            // Usamos JSON.stringify para evitar errores 400 Bad Request.
             const response = await ApiBackend.patch<ResponseAPI<string>>(
                 `${CONTROLLER_URL}/${id}/status`,
                 JSON.stringify(newStatus), 
@@ -122,10 +97,6 @@ export const PurchaseServices = {
         }
     },
 
-    /**
-     * Elimina una compra del sistema si no ha iniciado su flujo de cotización.
-     * @param id Identificador único de la compra.
-     */
     deletePurchase: async (id: number): Promise<ResponseAPI<string>> => {
         try {
             const response = await ApiBackend.delete<ResponseAPI<string>>(`${CONTROLLER_URL}/${id}`);
@@ -135,28 +106,18 @@ export const PurchaseServices = {
         }
     },
 
-    getAll: async (
-        status?: string,
-        searchTerm?: string,
-        orderBy?: string,
-        pageNumber: number = 1,
-        pageSize: number = 10
-    ): Promise<ResponseAPI<RequestQuote[]>> => {
+    /**
+     * Vincula proveedores a una solicitud de compra.
+     */
+    addSuppliers: async (purchaseId: number, supplierIds: number[]): Promise<ResponseAPI<string>> => {
         try {
-            // Usamos la ruta relativa
-            const response = await ApiBackend.get<ResponseAPI<RequestQuote[]>>(CONTROLLER_URL, {
-                params: {
-                    status,
-                    searchTerm,
-                    orderBy,
-                    pageNumber,
-                    pageSize
-                }
-            });
+            const response = await ApiBackend.post<ResponseAPI<string>>(
+                `${CONTROLLER_URL}/${purchaseId}/add-suppliers`, 
+                supplierIds
+            );
             return response.data;
         } catch (error) {
-            console.error("Error fetching request quotes:", error);
-            throw error;
+            return handleApiError(error);
         }
-    },
+    }
 };
