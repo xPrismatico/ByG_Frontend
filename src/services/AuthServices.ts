@@ -1,22 +1,22 @@
 // src/services/AuthServices.ts
 import { ApiBackend } from "@/clients/Axios";
-import { AuthenticatedUser } from "@/interfaces/Auth";
 import { ResponseAPI } from "@/interfaces/ResponseAPI";
 import { AuthenticatedUserDto, NewUserDto, LoginDto } from "@/interfaces/Users";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const CONTROLLER_URL = "api/Auth";
 
 export const AuthServices = {
     async login(data: LoginDto) {
         try {
-            // CORREGIDO: Usar ruta relativa con /api
-            const response = await ApiBackend.post<ResponseAPI<AuthenticatedUser>>(
-                '/api/Auth/login', 
+            // Asegúrate de que no haya una doble barra // entre API_URL y Auth
+            const response = await ApiBackend.post<ResponseAPI<AuthenticatedUserDto>>(
+                `${CONTROLLER_URL}/login`, 
                 data
             );
             return response.data;
         } catch (error: any) {
-            console.error("URL intentada:", '/api/Auth/login');
+            // Si el error es 404, imprimimos la URL exacta que falló
+            console.error("URL intentada:", `${CONTROLLER_URL}/login`);
             throw error.response?.data?.message || "Servidor no encontrado";
         }
     },
@@ -25,7 +25,7 @@ export const AuthServices = {
         try {
             // El backend retorna NewUserDto tras el registro
             const response = await ApiBackend.post<ResponseAPI<NewUserDto>>(
-                '/api/Auth/register',
+                `${CONTROLLER_URL}/register`,
                 values,
                 { headers: { "Content-Type": "application/json" } }
             );
