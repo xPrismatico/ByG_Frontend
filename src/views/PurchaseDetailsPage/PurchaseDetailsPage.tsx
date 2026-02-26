@@ -88,16 +88,6 @@ export default function PurchaseDetailsPage({ purchaseId }: Props) {
           <p className="text-[#2F2F2F] font-medium text-lg">{purchase.projectName}</p>
         </div>
 
-        {/* Acciones principales - Botón Rojo Destacado */}
-
-        <div className="flex flex-wrap gap-3">
-          {purchase.status === "Solicitud de cotización enviada" && (
-            <button className="flex items-center gap-2 rounded-xl bg-[#E7313C] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-red-500/20 hover:bg-[#c92a34] transition-all active:scale-95">
-              <Upload className="h-4 w-4" /> Subir Cotización de Proveedor
-            </button>
-          )}
-        </div>
-
       </div>
 
       {/* Navegación por Iconos + Texto para mejor UX */}
