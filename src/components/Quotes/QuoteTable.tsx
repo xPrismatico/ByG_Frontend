@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock3, XCircle, CheckCircle2, Eye, Edit, Download } from "lucide-react";
+import { Clock3, XCircle, CheckCircle2, Download } from "lucide-react"; // Asegúrate de importar ViewQuoteDialog y EditQuoteDialog si los usas
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,6 @@ import {
 import { ViewQuoteDialog } from "./ViewQuoteDialog";
 import { EditQuoteDialog } from "./EditQuoteDialog";
 
-// 1. Agregamos rawQuote a la interfaz para que TypeScript no se queje
 export interface CotizacionUI {
   id: string | number;
   numero: string;
@@ -24,7 +23,7 @@ export interface CotizacionUI {
   fechaRecepcion: string;
   total: number | null;
   estado: string;
-  rawQuote?: any; // <-- Dato original del backend
+  rawQuote?: any; 
 }
 
 interface QuoteTableProps {
@@ -81,33 +80,40 @@ export function QuoteTable({ cotizaciones }: QuoteTableProps) {
           </TableHeader>
           <TableBody>
             {cotizaciones.length > 0 ? (
-              cotizaciones.map((cot) => (
-                <TableRow key={cot.id} className="hover:bg-gray-50/50">
-                  <TableCell className="font-medium text-gray-900">{cot.numero}</TableCell>
-                  <TableCell className="text-gray-600">{cot.proveedor}</TableCell>
-                  <TableCell className="text-gray-600">{cot.fechaRecepcion}</TableCell>
-                  <TableCell className="text-gray-900 font-medium">
-                    {cot.total ? `$${cot.total.toLocaleString("es-CL")}` : "N/A"}
-                  </TableCell>
-                  <TableCell>{renderEstadoBadge(cot.estado)}</TableCell>
-                  
-                 
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2 items-center">
-                      
-                      
-                      <ViewQuoteDialog quote={cot.rawQuote} />
-                        {cot.estado?.toLowerCase() === "pendiente" && (
-                        <EditQuoteDialog quote={cot.rawQuote} />
-                        )}
+              cotizaciones.map((cot) => {
+                // ✅ CORRECCIÓN: Usamos llaves {} para poder declarar la variable const
+                const isEditable = cot.estado?.trim().toLowerCase() === "pendiente";
 
-                      <Button variant="outline" size="sm" className="h-8 w-8 px-0 text-gray-600 border-gray-200 hover:bg-gray-50" title="Descargar PDF">
-                        <Download className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                // ✅ Retornamos explícitamente el JSX
+                return (
+                  <TableRow key={cot.id} className="hover:bg-gray-50/50">
+                    <TableCell className="font-medium text-gray-900">{cot.numero}</TableCell>
+                    <TableCell className="text-gray-600">{cot.proveedor}</TableCell>
+                    <TableCell className="text-gray-600">{cot.fechaRecepcion}</TableCell>
+                    <TableCell className="text-gray-900 font-medium">
+                      {cot.total ? `$${cot.total.toLocaleString("es-CL")}` : "N/A"}
+                    </TableCell>
+                    <TableCell>{renderEstadoBadge(cot.estado)}</TableCell>
+                    
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2 items-center">
+                        
+                        {/* Asegúrate de tener este componente o coméntalo si no existe */}
+                        <ViewQuoteDialog quote={cot.rawQuote} />
+                        
+                        <EditQuoteDialog 
+                          quote={cot.rawQuote} 
+                          disabled={!isEditable} 
+                        />
+
+                        <Button variant="outline" size="sm" className="h-8 w-8 px-0 text-gray-600 border-gray-200 hover:bg-gray-50" title="Descargar PDF">
+                          <Download className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell colSpan={6} className="h-24 text-center text-gray-500">
