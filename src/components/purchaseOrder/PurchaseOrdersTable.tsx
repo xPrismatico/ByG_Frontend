@@ -34,12 +34,10 @@ const formatDateTime = (isoDate: string) => {
 
 // Estilos de Badge según estado de la OC
 const getStatusBadgeStyle = (status: string) => {
-  const s = status.toLowerCase()
-  if (s.includes("emitida")) return "border-blue-200 bg-blue-50 text-blue-700"
-  if (s.includes("recepcionada")) return "border-purple-200 bg-purple-50 text-purple-700"
-  if (s.includes("facturada")) return "border-amber-200 bg-amber-50 text-amber-700"
-  if (s.includes("cerrada") || s.includes("pagada")) return "border-emerald-200 bg-emerald-50 text-emerald-700"
-  if (s.includes("anulada")) return "border-red-200 bg-red-50 text-red-700"
+  const s = status
+  if (s.includes("Esperando Aprobación")) return "border-amber-200 bg-amber-50 text-amber-700"
+  if (s.includes("Enviada")) return "border-emerald-200 bg-emerald-50 text-emerald-700"
+  if (s.includes("Cancelada")) return "border-red-200 bg-red-50 text-red-700"
   return "border-slate-200 bg-slate-50 text-slate-500"
 }
 

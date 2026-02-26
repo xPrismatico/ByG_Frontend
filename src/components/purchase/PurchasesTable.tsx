@@ -29,13 +29,15 @@ const formatDateTime = (isoDate: string) => {
 
 const getStatusBadgeStyle = (status: string) => {
   switch (status) {
-    case "Solicitud recibida":
-      return "border-slate-200 bg-slate-100 text-slate-600"
+    case "Esperando proveedores":
+      return "border-amber-200 bg-amber-50 text-amber-700"
     case "Solicitud de cotización enviada":
       return "border-blue-200 bg-blue-50 text-blue-700"
     case "Esperando revisión":
       return "border-amber-200 bg-amber-50 text-amber-700"
-    case "Orden de compra emitida":
+    case "OC esperando aprobación":
+      return "border-amber-200 bg-amber-50 text-amber-700"
+    case "OC enviada":
       return "border-emerald-200 bg-emerald-50 text-emerald-700"
     case "Rechazada":
       return "border-red-200 bg-red-50 text-red-700"

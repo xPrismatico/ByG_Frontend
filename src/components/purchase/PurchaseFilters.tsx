@@ -74,7 +74,8 @@ export default function PurchaseFilters({
             <option value="Solicitud recibida">Solicitud recibida</option>
             <option value="Solicitud de cotización enviada">Solicitud de cotización enviada</option>
             <option value="Esperando revisión">Esperando revisión</option>
-            <option value="Orden de compra emitida">Orden de compra emitida</option>
+            <option value="OC esperando aprobación">OC esperando aprobación</option>
+            <option value="OC enviada">OC enviada</option>
             <option value="Rechazada">Rechazada</option>
           </select>
         </div>
