@@ -2,6 +2,7 @@
 import { ApiBackend } from "@/clients/Axios";
 import { ResponseAPI } from "@/interfaces/ResponseAPI";
 import { CreateQuoteDto, QuoteDto, QuoteFilters } from "@/interfaces/Quote";
+import { PagedResponse } from "@/interfaces/PagedResponse";
 
 const CONTROLLER_URL = '/api/Quote';
 
@@ -16,10 +17,12 @@ export const QuoteServices = {
   },
 
   async fetchQuotes(filters?: QuoteFilters): Promise<QuoteDto[]> {
-    const response = await ApiBackend.get<ResponseAPI<QuoteDto[]>>(CONTROLLER_URL, {
+    const response = await ApiBackend.get<ResponseAPI<PagedResponse<QuoteDto>>>(CONTROLLER_URL, {
       params: filters,
     });
-    return response.data.data;
+    
+    // Accedemos a data.data.items porque data.data es el objeto PagedResponse
+    return response.data.data?.items || [];
   },
 
   async toggleStatus(id: number, newStatus: string): Promise<string> {

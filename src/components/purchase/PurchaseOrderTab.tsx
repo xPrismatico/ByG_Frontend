@@ -112,6 +112,7 @@ return (
                         <p className="text-sm text-slate-500 flex items-center gap-2">
                             Estado: 
                             <span className={`font-semibold px-2 py-0.5 rounded-md text-xs border ${
+                                order.status === "Esperando Aprobación" ? "bg-amber-50 text-amber-700 border-amber-200" :
                                 order.status === "Enviada" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
                                 order.status === "Cancelada" ? "bg-red-50 text-red-700 border-red-200" :
                                 "bg-blue-50 text-blue-700 border-blue-200"
