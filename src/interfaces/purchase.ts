@@ -46,6 +46,7 @@ export interface PurchaseDetail {
     purchaseItems: PurchaseItem[];
     requestQuote: RequestQuote | null; 
     hasPurchaseOrder: boolean;
+    purchaseOrderId?: number;
 }
 
 /**

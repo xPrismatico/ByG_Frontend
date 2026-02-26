@@ -36,15 +36,48 @@ export interface PurchaseOrderFilters {
 export interface PurchaseOrderCreate {
     purchaseId: number;
     quoteId: number;
+
+    // Datos de Formalización
+    costCenter: string;
+
+    // Logística y Administrativa
     paymentForm?: string;
     paymentTerms?: string;
+
+    // Fechas (En formato string YYYY-MM-DD para input date)
     expectedDeliveryDate?: string; // DateOnly string (YYYY-MM-DD)
+    deliveryDeadline?: string;
+
     shippingAddress?: string;
     shippingMethod?: string;
     observations?: string;
+
+    // Datos Financieros (Nuevos)
+    currency?: string;
+    discount?: number;
+    freightCharge?: number; // Costo de flete
+
+    // Firmas
     approverName?: string;
     approverRut?: string;
     approverRole?: string;
+}
+
+/**
+ * DTO para ACTUALIZAR una Orden de Compra existente.
+ * Coincide con UpdatePurchaseOrderDto del Backend.
+ */
+export interface PurchaseOrderUpdate {
+    costCenter?: string;
+    paymentForm?: string;
+    paymentTerms?: string;
+    shippingAddress?: string;
+    shippingMethod?: string;
+    observations?: string;
+    expectedDeliveryDate?: string;
+    deliveryDeadline?: string;
+    discount?: number;
+    freightCharge?: number;
 }
 
 // --- DETALLE DE ORDEN DE COMPRA (Coincide con PurchaseOrderDetailDto) ---

@@ -8,8 +8,9 @@ import { ArrowLeft, AlertCircle, FileText, Upload, ShoppingCart, ClipboardList, 
 import { cn } from "@/lib/utils"
 import GeneralInfoTab from "@/components/purchase/GeneralInfoTab"
 import ProductsTab from "@/components/purchase/ProductsTab"
-import QuotesComparisonTab from "@/components/Quotes/QuoteComparisonTab"
-import RequestQuoteTab from "@/components/RequestQuote/RequestQuoteTab"
+import QuotesComparisonTab from "@/components/purchase/QuoteComparisonTab"
+import RequestQuoteTab from "@/components/purchase/RequestQuoteTab"
+import PurchaseOrderTab from "@/components/purchase/PurchaseOrderTab"
 
 interface Props {
   purchaseId: number
@@ -119,51 +120,47 @@ export default function PurchaseDetailsPage({ purchaseId }: Props) {
           Cotizaciones Recibidas
         </TabButton>
 
-        {purchase.hasPurchaseOrder && (
-          <TabButton active={activeTab === "order"} onClick={() => setActiveTab("order")} icon={<FileText className="h-4 w-4" />}>
+        {(purchase.hasPurchaseOrder || purchase.purchaseOrderId) && (
+          <TabButton 
+            active={activeTab === "order"} 
+            onClick={() => setActiveTab("order")} 
+            icon={<FileText className="h-4 w-4" />}
+          >
             Orden de Compra
           </TabButton>
         )}
 
       </div>
 
-      {/* Contenido Dinámico */}
+      {/* CONTENIDO DINÁMICO */}
       <div className="min-h-[400px]">
-
         {activeTab === "general" && <GeneralInfoTab purchase={purchase} />}
         {activeTab === "products" && <ProductsTab items={purchase.purchaseItems} />}
+        {activeTab === "request" && purchase && <RequestQuoteTab data={purchase.requestQuote} />}
         
-        {/* Sección de Solicitud de Cotización para mostrar la Solicitud y sus Proveedores a quienes se envió */}
-        {activeTab === "request" && purchase && (
-          <RequestQuoteTab data={purchase.requestQuote} />
-        )}
-
-
-      {/* Sección de Autorizar Cotizaciones */}
+        {/* Tab Cotizaciones: Recargamos la compra al cambiar estado para obtener el purchaseOrderId nuevo */}
         {activeTab === "quotes" && (
-          <div className="animate-in slide-in-from-bottom-4 duration-500">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-[#1C1C1C]">Cotizaciones Recibidas</h2>
-              <p className="text-slate-500">Compara los precios y aprueba la cotización para generar la Orden de Compra[cite: 122].</p>
-            </div>
-            
-            <QuotesComparisonTab 
-              purchaseId={purchase.id} 
-              purchaseItems={purchase.purchaseItems}
-              onQuoteStatusChanged={() => {
-                // Forzamos la recarga de la compra completa para actualizar los badges/estados
+          <QuotesComparisonTab 
+             purchaseId={purchase.id} 
+             purchaseItems={purchase.purchaseItems}
+             onQuoteStatusChanged={() => {
+                // Al aprobar, recargamos para obtener el purchaseOrderId
                 const refresh = async () => {
                    const res = await PurchaseServices.getPurchaseById(purchaseId);
                    if (res.success && res.data) setPurchase(res.data);
                 };
                 refresh();
-              }} 
-            />
-          </div>
+             }} 
+          />
         )}
 
+        {/* ✅ RENDERIZADO DEL NUEVO TAB DE ORDEN DE COMPRA */}
+        {activeTab === "order" && purchase.purchaseOrderId && (
+           <div className="animate-in slide-in-from-bottom-4 duration-500">
+              <PurchaseOrderTab orderId={purchase.purchaseOrderId} />
+           </div>
+        )}
       </div>
-
     </div>
   )
 }
