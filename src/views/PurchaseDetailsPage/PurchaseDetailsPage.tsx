@@ -76,7 +76,7 @@ export default function PurchaseDetailsPage({ purchaseId }: Props) {
         <div className="space-y-1">
           <div className="flex items-center gap-3">
             <h1 className="text-3xl font-bold text-[#1C1C1C] tracking-tight">
-              Solicitud {purchase.purchaseNumber}
+              Compra {purchase.purchaseNumber}
             </h1>
             <span className={cn(
               "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border",

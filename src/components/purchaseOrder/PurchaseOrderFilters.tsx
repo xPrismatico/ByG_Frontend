@@ -62,11 +62,10 @@ export default function PurchaseOrderFilters({
             className="w-full px-3 py-2 bg-slate-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-xl text-sm transition-colors outline-none cursor-pointer"
           >
             <option value="">Todos</option>
-            <option value="Emitida">Emitida</option>
-            <option value="Recepcionada">Recepcionada</option>
-            <option value="Facturada">Facturada</option>
-            <option value="Cerrada">Cerrada</option>
-            <option value="Anulada">Anulada</option>
+            <option value="Esperando Aprobación">Esperando Aprobación</option>
+            <option value="Enviada">Enviada</option>
+            <option value="Cancelada">Cancelada</option>
+
           </select>
         </div>
 

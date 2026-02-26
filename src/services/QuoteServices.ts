@@ -2,7 +2,7 @@
 import { ApiBackend } from "@/clients/Axios";
 import { ResponseAPI } from "@/interfaces/ResponseAPI";
 import { CreateQuoteDto, QuoteDto, QuoteFilters } from "@/interfaces/Quote";
-import { PagedResponse } from "@/interfaces/PagedResponse"; // Importa tu interfaz de paginación
+import { PagedResponse } from "@/interfaces/PagedResponse";
 
 const CONTROLLER_URL = 'api/Quote';
 
@@ -18,18 +18,13 @@ export const QuoteServices = {
     return response.data;
   },
 
-  /**
-   * Obtiene la lista de cotizaciones con paginación, búsqueda y orden dinámico
-   * @param filters Objeto que contiene status, searchTerm, orderBy, pageNumber, pageSize
-   */
-  async fetchQuotes(filters?: QuoteFilters): Promise<PagedResponse<QuoteDto>> {
-    // Nota: Cambiamos QuoteDto[] por PagedResponse<QuoteDto>
+  async fetchQuotes(filters?: QuoteFilters): Promise<QuoteDto[]> {
     const response = await ApiBackend.get<ResponseAPI<PagedResponse<QuoteDto>>>(CONTROLLER_URL, {
       params: filters,
     });
     
-    // Retornamos el objeto paginado completo (items, totalItems, totalPages, etc.)
-    return response.data.data;
+    // Accedemos a data.data.items porque data.data es el objeto PagedResponse
+    return response.data.data?.items || [];
   },
 
   /**
