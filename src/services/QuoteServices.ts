@@ -18,13 +18,13 @@ export const QuoteServices = {
     return response.data;
   },
 
-  async fetchQuotes(filters?: QuoteFilters): Promise<QuoteDto[]> {
+  async fetchQuotes(filters?: QuoteFilters): Promise<PagedResponse<QuoteDto>> {
     const response = await ApiBackend.get<ResponseAPI<PagedResponse<QuoteDto>>>(CONTROLLER_URL, {
       params: filters,
     });
     
-    // Accedemos a data.data.items porque data.data es el objeto PagedResponse
-    return response.data.data?.items || [];
+    // Retornamos el objeto PagedResponse completo
+    return response.data.data;
   },
 
   /**
