@@ -25,7 +25,7 @@ export default function QuoteList() {
 
   // 2. Extraemos los items del objeto paginado para mapearlos
   // Notar que ahora usamos pagedData?.items en lugar de pagedData directo
-  const cotizacionesMapeadas: CotizacionUI[] = pagedData?.items.map((q) => ({
+  const cotizacionesMapeadas: CotizacionUI[] = pagedData?.items?.map((q: QuoteDto) => ({
     id: q.id,
     numero: q.number,
     proveedor: q.supplierName || "Proveedor No Identificado",
@@ -60,7 +60,7 @@ export default function QuoteList() {
           <p className="text-gray-500 mt-1">Administra cotizaciones de proveedores</p>
         </div>
         
-        <div className="flex-shrink-0">
+        <div className="shrink-0">
           <CreateQuoteDialog />
         </div>
       </div>
