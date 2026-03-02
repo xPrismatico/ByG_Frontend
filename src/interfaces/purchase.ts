@@ -83,14 +83,3 @@ export interface PurchaseUpdate {
     requester: string;
     observations?: string;
 }
-
-
-export interface PurchaseSummary {
-    id: number;
-    purchaseNumber: string;
-    projectName: string;
-    status: string;
-    requestDate: string; 
-    requester: string;
-    itemsCount: number;
-}
