@@ -17,6 +17,7 @@ export interface AuthenticatedUserDto {
     phone: string;
     token: string;
     isActive: boolean;
+    role: string;
     registered: string;
     lastAccess: string | null;
 }
