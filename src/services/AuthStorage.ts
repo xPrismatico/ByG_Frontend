@@ -1,10 +1,10 @@
-import type { AuthenticatedUser, UserSession } from "@/interfaces/Auth"
+import type { AuthenticatedUserDto, UserSession } from "@/interfaces/Auth"
 
 const TOKEN_KEY = "auth_token"
 const USER_KEY = "auth_user"
 
 export const AuthStorage = {
-  saveSession(user: AuthenticatedUser) {
+  saveSession(user: AuthenticatedUserDto) {
     localStorage.setItem(TOKEN_KEY, user.token);
     // Guardamos nombre y apellido por separado o los concatenamos aquí
     localStorage.setItem(USER_KEY, JSON.stringify({ 
