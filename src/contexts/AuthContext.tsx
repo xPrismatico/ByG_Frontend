@@ -2,13 +2,13 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { AuthStorage } from "@/services/AuthStorage";
-import { UserSession, AuthenticatedUser } from "@/interfaces/Auth";
+import { UserSession, AuthenticatedUserDto } from "@/interfaces/Auth";
 import { useRouter } from "next/navigation";
 
 interface AuthContextType {
   user: UserSession | null;
   isLoading: boolean;
-  login: (data: AuthenticatedUser) => void;
+  login: (data: AuthenticatedUserDto) => void;
   logout: () => void;
 }
 
@@ -28,7 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = (data: AuthenticatedUser) => {
+  const login = (data: AuthenticatedUserDto) => {
     // 1. Guardar en LocalStorage
     AuthStorage.saveSession(data);
     // 2. Actualizar estado global (React se entera y actualiza el Navbar)
