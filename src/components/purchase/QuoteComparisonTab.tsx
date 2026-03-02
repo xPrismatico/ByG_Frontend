@@ -32,7 +32,7 @@ export default function QuotesComparisonTab({ purchaseId, purchaseItems, onQuote
     setLoading(true);
     try {
       const data = await QuoteServices.fetchQuotes({ purchaseId });
-      setQuotes(data || []);
+      setQuotes(data?.items || []);
     } catch (error) {
       console.error("Error fetching quotes", error);
     } finally {
