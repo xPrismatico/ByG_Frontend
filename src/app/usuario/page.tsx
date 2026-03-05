@@ -1,3 +1,4 @@
+import RoleGuard from "@/components/RoleGuard";
 import UserList from "@/views/userList/UserList";
 
 export const metadata = {
@@ -7,6 +8,10 @@ export const metadata = {
 
 // Consulta si usuario se encuentra autenticado o redirige a otra página
 export default function Usuarios() {
-    console.log("Lista de usuarios loaded");
-    return <UserList />;
+    return (
+    <RoleGuard allowedRoles={['Admin']}>
+       <UserList />;
+    </RoleGuard>
+    )
+    
 }

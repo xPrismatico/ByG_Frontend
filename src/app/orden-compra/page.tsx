@@ -2,6 +2,7 @@
 
 import { Metadata } from "next";
 import PurchaseOrderPage from "@/views/PurchaseOrderPage/PurchaseOrderPage";
+import RoleGuard from "@/components/RoleGuard";
 
 export const metadata: Metadata = {
   title: "Órdenes de Compra | Sistema de Compras ByG",
@@ -9,5 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
-  return <PurchaseOrderPage />;
+  return (
+  
+  <RoleGuard allowedRoles={["Admin", "GestorCompras", "AutorizadorCompras"]}>
+    <PurchaseOrderPage />;
+  </RoleGuard>
+  )
 }

@@ -21,14 +21,53 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/AuthContext" // <--- IMPORTANTE
 
-// Definimos roles permitidos para cada ruta
+// 1. DEFINICIÓN DE ROLES EXACTOS (Deben coincidir con IdentitySeeder.cs)
+// Admin, GestorCompras, AutorizadorCompras
+
 const navItems = [
-  { label: "Panel de Control", href: "/", icon: LayoutDashboard, roles: ["Admin", "GestorCompras", "AutorizadorCompras"] },
-  { label: "Compras", href: "/compra", icon: ShoppingCart, roles: ["Admin", "GestorCompras", "AutorizadorCompras"] },
-  { label: "Cotizaciones", href: "/cotizacion", icon: FileText, roles: ["Admin", "GestorCompras", "AutorizadorCompras"] },
-  { label: "Órdenes de Compra", href: "/orden-compra", icon: ClipboardList, roles: ["Admin", "GestorCompras", "AutorizadorCompras"] },
-  { label: "Proveedores", href: "/proveedor", icon: Building2, roles: ["Admin", "GestorCompras"] },
-  { label: "Gestión de Usuarios", href: "/usuario", icon: UserCog, roles: ["Admin"] },
+  { 
+    label: "Panel de Control", 
+    href: "/", 
+    icon: LayoutDashboard, 
+    // Todos pueden ver el dashboard
+    roles: ["Admin", "GestorCompras", "AutorizadorCompras"] 
+  },
+  { 
+    label: "Compras", 
+    href: "/compra", 
+    icon: ShoppingCart, 
+    // El Autorizador debe ver la Compra para entender el contexto (quién pidió, para qué proyecto)
+    roles: ["Admin", "GestorCompras", "AutorizadorCompras"] 
+  },
+  { 
+    label: "Cotizaciones", 
+    href: "/cotizacion", 
+    icon: FileText, 
+    // CRÍTICO: El Autorizador necesita esto para dar el "Visto Bueno"
+    roles: ["Admin", "GestorCompras", "AutorizadorCompras"] 
+  },
+  { 
+    label: "Órdenes de Compra", 
+    href: "/orden-compra", 
+    icon: ClipboardList, 
+    // El Gestor las envía, el Autorizador las genera indirectamente, el Admin supervisa
+    roles: ["Admin", "GestorCompras", "AutorizadorCompras"] 
+  },
+  { 
+    label: "Proveedores", 
+    href: "/proveedor", 
+    icon: Building2, 
+    // El Autorizador no suele dar de alta empresas, solo valida precios.
+    // Se lo dejamos al Gestor (operativo) y Admin.
+    roles: ["Admin", "GestorCompras"] 
+  },
+  { 
+    label: "Gestión de Usuarios", 
+    href: "/usuario", 
+    icon: UserCog, 
+    // Exclusivo Admin
+    roles: ["Admin"] 
+  },
 ]
 
 export function Navbar() {
