@@ -1,7 +1,13 @@
+import RoleGuard from "@/components/RoleGuard";
 import QuoteList from "@/views/quoteList/QuoteList";
 
 // Consulta si usuario se encuentra autenticado o redirige a otra página
 export default function Cotizaciones() {
-    console.log("Lista de cotizaciones loaded");
-    return <QuoteList />;
+
+
+    return (
+    <RoleGuard allowedRoles={["Admin", "GestorCompras", "AutorizadorCompras"]}>
+        <QuoteList />;
+    </RoleGuard>
+    )
 }

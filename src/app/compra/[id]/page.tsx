@@ -1,3 +1,4 @@
+import RoleGuard from "@/components/RoleGuard";
 import PurchaseDetailsPage from "@/views/PurchaseDetailsPage/PurchaseDetailsPage"
 
 interface Props {
@@ -22,5 +23,12 @@ export default async function Page({ params }: Props) {
     return <div className="p-6 text-red-600 font-bold">ID de compra inválido.</div>;
   }
 
-  return <PurchaseDetailsPage purchaseId={purchaseId} />;
+  return (
+  <RoleGuard allowedRoles={["Admin", "GestorCompras", "AutorizadorCompras"]}>
+
+    <PurchaseDetailsPage purchaseId={purchaseId} />;
+
+  </RoleGuard>
+  )
+
 }

@@ -1,5 +1,6 @@
 // src/app/compra/page.tsx
 
+import RoleGuard from "@/components/RoleGuard"
 import PurchasesPage from "@/views/PurchasePage/PurchasePage"
 
 export const metadata = {
@@ -8,5 +9,12 @@ export const metadata = {
 }
 
 export default function Page() {
-  return <PurchasesPage />
+
+  return (
+// Aquí permitimos a los 3 roles principales
+    <RoleGuard allowedRoles={["Admin", "GestorCompras", "AutorizadorCompras"]}>
+      <PurchasesPage />
+    </RoleGuard>
+    )
+  
 }
