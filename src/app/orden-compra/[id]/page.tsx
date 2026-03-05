@@ -1,3 +1,4 @@
+import RoleGuard from "@/components/RoleGuard";
 import PurchaseOrderDetailPage from "@/views/PurchaseOrderDetailPage/PurchaseOrderDetailPage";
 import { Metadata } from "next";
 
@@ -23,5 +24,12 @@ export default async function Page({ params }: Props) {
       return <div>Error: ID de orden inválido</div>;
   }
   
-  return <PurchaseOrderDetailPage orderId={orderId} />;
+  return (
+  
+  <RoleGuard allowedRoles={["Admin", "GestorCompras", "AutorizadorCompras"]}>
+    <PurchaseOrderDetailPage orderId={orderId} />;
+
+  </RoleGuard>
+  )
+  
 }

@@ -1,4 +1,5 @@
 // src/app/proveedor/page.tsx
+import RoleGuard from "@/components/RoleGuard"
 import SuppliersPage from "@/views/SuppliersPage/SuppliersPage"
 
 export const metadata = {
@@ -7,5 +8,14 @@ export const metadata = {
 }
 
 export default function Page() {
-  return <SuppliersPage />
+  return (
+  // SOLO Admin y Gestor pueden ver esto
+    <RoleGuard allowedRoles={["Admin", "GestorCompras"]}>
+      
+      <div className="p-6">
+        <SuppliersPage />
+      </div>
+
+    </RoleGuard>
+  )
 }
