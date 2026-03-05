@@ -3,26 +3,33 @@
 import { useEffect, useState } from "react";
 import { QuoteServices } from "@/services/QuoteServices";
 import { QuoteDto } from "@/interfaces/Quote";
-// Importamos la interfaz correcta
 import { PurchaseItem } from "@/interfaces/purchase";
 import { CheckCircle2, XCircle, Building2, AlertCircle, TrendingDown, FileCheck, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import FormalizeOrderDialog from "@/components/purchase/FormalizeOrderDialog";
 import { CreateQuoteDialog } from "@/components/Quotes/CreateQuoteDialog";
 
+//  1. Importamos el hook de autenticación
+import { useAuth } from "@/contexts/AuthContext"; 
+
 interface Props {
   purchaseId: number;
-  purchaseItems: PurchaseItem[]; // Está definido aquí
+  purchaseItems: PurchaseItem[];
   onQuoteStatusChanged: () => void;
 }
 
-// ✅ CORRECCIÓN AQUÍ: Agregamos 'purchaseItems' a los argumentos
 export default function QuotesComparisonTab({ purchaseId, purchaseItems, onQuoteStatusChanged }: Props) {
+  //  2. Obtenemos el usuario actual del contexto
+  const { user } = useAuth();
+
   const [quotes, setQuotes] = useState<QuoteDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
-  
   const [selectedQuoteForOrder, setSelectedQuoteForOrder] = useState<QuoteDto | null>(null);
+
+  //  3. Definimos la lógica de permisos:
+  // Solo Admin y AutorizadorCompras pueden ver los botones de decisión.
+  const canDecide = user?.role === "Admin" || user?.role === "AutorizadorCompras";
 
   useEffect(() => {
     fetchQuotes();
@@ -65,7 +72,6 @@ export default function QuotesComparisonTab({ purchaseId, purchaseItems, onQuote
     onQuoteStatusChanged();
   };
 
-  // Cálculos visuales
   const lowestPrice = Math.min(...quotes.filter(q => q.totalPrice != null).map(q => q.totalPrice || Infinity));
   const hasApproved = quotes.some(q => q.status === "Aprobada");
   const formatCLP = (val: number) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(val);
@@ -80,11 +86,10 @@ export default function QuotesComparisonTab({ purchaseId, purchaseItems, onQuote
             <p className="text-slate-500 text-sm">Gestiona las ofertas recibidas para esta solicitud.</p>
          </div>
          
-         {/* ✅ CORRECCIÓN AQUÍ: Pasamos los items al diálogo */}
          <CreateQuoteDialog 
-            purchaseId={purchaseId} 
-            initialItems={purchaseItems} 
-            onSuccess={() => fetchQuotes()} 
+           purchaseId={purchaseId} 
+           initialItems={purchaseItems} 
+           onSuccess={() => fetchQuotes()} 
          />
       </div>
 
@@ -159,8 +164,8 @@ export default function QuotesComparisonTab({ purchaseId, purchaseItems, onQuote
                     </ul>
                 </div>
 
-                {/* Footer Actions */}
-                {!isApproved && !isRejected && !hasApproved && (
+                {/*  4. Footer Actions: Agregamos la condición `&& canDecide` */}
+                {!isApproved && !isRejected && !hasApproved && canDecide && (
                     <div className="p-4 bg-white border-t border-slate-100 grid grid-cols-2 gap-3">
                     <button
                         onClick={() => handleActionClick(quote, "Rechazar")}
